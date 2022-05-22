@@ -1,87 +1,83 @@
 ---
 - hosts: all 
   become: yes
-  # run with ansible-playbook install.yml -i hosts --key-file "~/dev/chaordic/cddhub-demo2.pem" -u [your username] --extra-vars "psql_pass=password"
-  # certbot certonly --manual -d lexpert-test.chaordic.io
-  #[]/etc/letsencrypt/live/lexpert-test.chaordic.io/fullchain.pem
-  #Your key file has been saved at:
-  #/etc/letsencrypt/live/lexpert-test.chaordic.io/privkey.pem
+
   tasks:
-    - name: Print all available facts
-      ansible.builtin.debug:
-        var: hostvars[inventory_hostname]["groups"]["all"]
-    # - name: Set authorized key taken from file
-    #   authorized_key:
-    #     user: root
-    #     state: present
-    #     key: "{{ lookup('file', 'id_rsa.pub') }}"
-    # - name: Add HCP signing key
-    #   ansible.builtin.apt_key:
-    #     url: https://apt.releases.hashicorp.com/gpg
-    #     state: present
-    # - name: Add Docker signing key
-    #   ansible.builtin.apt_key:
-    #     url: https://download.docker.com/linux/ubuntu/gpg
-    #     state: present
-    # - name: Add hcp into sources list
-    #   ansible.builtin.apt_repository:
-    #     repo: deb https://apt.releases.hashicorp.com jammy main
-    #     state: present
-    # - name: Add docker repository into sources list
-    #   ansible.builtin.apt_repository:
-    #     repo: deb https://download.docker.com/linux/ubuntu jammy stable 
-    #     state: present
-    # - name: ensure apt cache is updated
-    #   action: apt update_cache=yes
+    # - name: Print all available facts
+    #   ansible.builtin.debug:
+    #     var: hostvars[inventory_hostname]["groups"]["all"]
+    - name: Set authorized key taken from file
+      authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', 'id_rsa.pub') }}"
+    - name: Add HCP signing key
+      ansible.builtin.apt_key:
+        url: https://apt.releases.hashicorp.com/gpg
+        state: present
+    - name: Add Docker signing key
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+    - name: Add hcp into sources list
+      ansible.builtin.apt_repository:
+        repo: deb https://apt.releases.hashicorp.com jammy main
+        state: present
+    - name: Add docker repository into sources list
+      ansible.builtin.apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu jammy stable 
+        state: present
+    - name: ensure apt cache is updated
+      action: apt update_cache=yes
 
-    # - name: Upgrade the OS (apt-get dist-upgrade)
-    #   apt:
-    #     upgrade: dist
+    - name: Upgrade the OS (apt-get dist-upgrade)
+      apt:
+        upgrade: dist
 
-    # - name: ensure all software is installed
-    #   action: apt name={{item}}
-    #   with_items:
-    #     - wget
-    #     - curl
-    #     - ca-certificates
-    #     - gnupg
-    #     - lsb-release
-    #     - nomad
-    #     - consul
-    #     - vault
-    #     - docker-ce
-    #     - docker-ce-cli
-    #     - containerd.io
-    #     - docker-compose-plugin
+    - name: ensure all software is installed
+      action: apt name={{item}}
+      with_items:
+        - wget
+        - curl
+        - ca-certificates
+        - gnupg
+        - lsb-release
+        - nomad
+        - consul
+        - vault
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        - docker-compose-plugin
 
-    # - name: add group consul
-    #   group: name='consul'
+    - name: add group consul
+      group: name='consul'
 
-    # - name: add consul user
-    #   user: name='consul' groups="consul"
+    - name: add consul user
+      user: name='consul' groups="consul"
 
-    # - name: Creates config dir
-    #   file:
-    #     path: /etc/consul.d
-    #     state: directory
-    #     owner: consul
-    #     group: consul
-    #     mode: 0755
-    # - name: Creates certs dir
-    #   file:
-    #     path: /etc/consul.d/certs
-    #     state: directory
-    #     owner: consul
-    #     group: consul
-    #     mode: 0755
+    - name: Creates config dir
+      file:
+        path: /etc/consul.d
+        state: directory
+        owner: consul
+        group: consul
+        mode: 0755
+    - name: Creates certs dir
+      file:
+        path: /etc/consul.d/certs
+        state: directory
+        owner: consul
+        group: consul
+        mode: 0755
 
-    # - name: Creates data dir
-    #   file:
-    #     path: /opt/consul
-    #     state: directory
-    #     owner: consul
-    #     group: consul
-    #     mode: 0755
+    - name: Creates data dir
+      file:
+        path: /opt/consul
+        state: directory
+        owner: consul
+        group: consul
+        mode: 0755
     - name: copy ufw script
       template:
         src: ufw-setup.j2
@@ -91,3 +87,69 @@
       ansible.builtin.shell: /root/ufw-setup.sh
       args:
         executable: /bin/bash
+    - name: copy consul agent ca 
+      copy:
+        src: secrets/consul/consul-agent-ca.pem
+        dest: /etc/consul.d/certs/consul-agent-ca.pem
+        owner: consul
+        group: consul
+        mode: 0644
+    - name: copy consul service file
+      copy:
+        src: consul/consul.service
+        dest: /etc/systemd/system/consul.service
+        mode: 0755
+
+- hosts: clients
+  become: yes
+  tasks:
+    - name: copy agent config
+      template:
+        src: consul/client.j2
+        dest: /etc/consul.d/consul.hcl
+        owner: consul
+        group: consul
+        mode: 0644
+
+- hosts: consul_servers
+  become: yes
+
+  tasks:
+    - name: copy agent ca 
+      copy:
+        src: secrets/consul/consul-agent-ca.pem
+        dest: /etc/consul.d/certs/consul-agent-ca.pem
+        owner: consul
+        group: consul
+        mode: 0644
+    - name: copy server pem
+      copy:
+        src: secrets/consul/dc1-server-consul-0.pem
+        dest: /etc/consul.d/certs/dc1-server-consul-0.pem
+        owner: consul
+        group: consul
+        mode: 0644
+    - name: copy server key
+      copy:
+        src: secrets/consul/dc1-server-consul-0-key.pem
+        dest: /etc/consul.d/certs/dc1-server-consul-0-key.pem
+        owner: consul
+        group: consul
+        mode: 0644
+    - name: copy server config
+      template:
+        src: consul/server.j2
+        dest: /etc/consul.d/consul.hcl
+        owner: consul
+        group: consul
+        mode: 0644
+
+- hosts: all 
+  become: yes
+
+  tasks:
+    - name: Restart consul service
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: yes
+        name: consul

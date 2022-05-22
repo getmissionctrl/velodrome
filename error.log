@@ -1,0 +1,98 @@
+==> Log data will now stream in as it occurs:
+
+2022-05-22T16:54:33.578+0200 [WARN]  agent: skipping file /etc/consul.d/consul.env, extension must be .hcl or .json, or config format must be set
+2022-05-22T16:54:33.578+0200 [WARN]  agent: The 'ca_file' field is deprecated. Use the 'tls.defaults.ca_file' field instead.
+2022-05-22T16:54:33.578+0200 [WARN]  agent: The 'cert_file' field is deprecated. Use the 'tls.defaults.cert_file' field instead.
+2022-05-22T16:54:33.578+0200 [WARN]  agent: The 'key_file' field is deprecated. Use the 'tls.defaults.key_file' field instead.
+2022-05-22T16:54:33.578+0200 [WARN]  agent: The 'verify_incoming' field is deprecated. Use the 'tls.defaults.verify_incoming' field instead.
+2022-05-22T16:54:33.578+0200 [WARN]  agent: The 'verify_outgoing' field is deprecated. Use the 'tls.defaults.verify_outgoing' field instead.
+2022-05-22T16:54:33.578+0200 [WARN]  agent: The 'verify_server_hostname' field is deprecated. Use the 'tls.internal_rpc.verify_server_hostname' field instead.
+2022-05-22T16:54:33.578+0200 [WARN]  agent: Node name "vmi887138.contaboserver.net" will not be discoverable via DNS due to invalid characters. Valid characters include all alpha-numerics and dashes.
+2022-05-22T16:54:33.578+0200 [WARN]  agent: bootstrap_expect > 0: expecting 3 servers
+2022-05-22T16:54:33.586+0200 [WARN]  agent.auto_config: skipping file /etc/consul.d/consul.env, extension must be .hcl or .json, or config format must be set
+2022-05-22T16:54:33.586+0200 [WARN]  agent.auto_config: The 'ca_file' field is deprecated. Use the 'tls.defaults.ca_file' field instead.
+2022-05-22T16:54:33.586+0200 [WARN]  agent.auto_config: The 'cert_file' field is deprecated. Use the 'tls.defaults.cert_file' field instead.
+2022-05-22T16:54:33.586+0200 [WARN]  agent.auto_config: The 'key_file' field is deprecated. Use the 'tls.defaults.key_file' field instead.
+2022-05-22T16:54:33.586+0200 [WARN]  agent.auto_config: The 'verify_incoming' field is deprecated. Use the 'tls.defaults.verify_incoming' field instead.
+2022-05-22T16:54:33.586+0200 [WARN]  agent.auto_config: The 'verify_outgoing' field is deprecated. Use the 'tls.defaults.verify_outgoing' field instead.
+2022-05-22T16:54:33.586+0200 [WARN]  agent.auto_config: The 'verify_server_hostname' field is deprecated. Use the 'tls.internal_rpc.verify_server_hostname' field instead.
+2022-05-22T16:54:33.586+0200 [WARN]  agent.auto_config: Node name "vmi887138.contaboserver.net" will not be discoverable via DNS due to invalid characters. Valid characters include all alpha-numerics and dashes.
+2022-05-22T16:54:33.586+0200 [WARN]  agent.auto_config: bootstrap_expect > 0: expecting 3 servers
+2022-05-22T16:54:33.591+0200 [INFO]  agent.server.raft: initial configuration: index=0 servers=[]
+2022-05-22T16:54:33.591+0200 [INFO]  agent.server.raft: entering follower state: follower="Node at 172.17.0.1:8300 [Follower]" leader=
+2022-05-22T16:54:33.592+0200 [INFO]  agent.server.serf.wan: serf: EventMemberJoin: vmi887138.contaboserver.net.contabo 172.17.0.1
+2022-05-22T16:54:33.594+0200 [WARN]  agent.server.serf.wan: serf: Failed to re-join any previously known node
+2022-05-22T16:54:33.595+0200 [INFO]  agent.server.serf.lan: serf: EventMemberJoin: vmi887138.contaboserver.net 172.17.0.1
+2022-05-22T16:54:33.595+0200 [INFO]  agent.router: Initializing LAN area manager
+2022-05-22T16:54:33.595+0200 [INFO]  agent.server.autopilot: reconciliation now disabled
+2022-05-22T16:54:33.596+0200 [WARN]  agent.server.serf.lan: serf: Failed to re-join any previously known node
+2022-05-22T16:54:33.596+0200 [INFO]  agent.server: Handled event for server in area: event=member-join server=vmi887138.contaboserver.net.contabo area=wan
+2022-05-22T16:54:33.598+0200 [INFO]  agent.server: Adding LAN server: server="vmi887138.contaboserver.net (Addr: tcp/172.17.0.1:8300) (DC: contabo)"
+2022-05-22T16:54:33.607+0200 [INFO]  agent: Started DNS server: address=0.0.0.0:8600 network=udp
+2022-05-22T16:54:33.607+0200 [INFO]  agent: Started DNS server: address=0.0.0.0:8600 network=tcp
+2022-05-22T16:54:33.608+0200 [INFO]  agent: Starting server: address=[::]:8500 network=tcp protocol=http
+2022-05-22T16:54:33.611+0200 [INFO]  agent: Retry join is supported for the following discovery methods: cluster=LAN discovery_methods="aliyun aws azure digitalocean gce k8s linode mdns os packet scaleway softlayer tencentcloud triton vsphere"
+2022-05-22T16:54:33.611+0200 [INFO]  agent: Joining cluster...: cluster=LAN
+2022-05-22T16:54:33.611+0200 [INFO]  agent: (LAN) joining: lan_addresses=[vmi887138.contaboserver.net, vmi888027.contaboserver.net, vmi888028.contaboserver.net]
+2022-05-22T16:54:33.612+0200 [INFO]  agent: started state syncer
+2022-05-22T16:54:33.612+0200 [INFO]  agent: Consul agent running!
+2022-05-22T16:54:33.629+0200 [INFO]  agent.server.serf.lan: serf: EventMemberJoin: vmi888027.contaboserver.net 172.17.0.1
+2022-05-22T16:54:33.630+0200 [INFO]  agent.server: Adding LAN server: server="vmi888027.contaboserver.net (Addr: tcp/172.17.0.1:8300) (DC: contabo)"
+2022-05-22T16:54:33.661+0200 [INFO]  agent.server.serf.lan: serf: EventMemberJoin: vmi888028.contaboserver.net 172.17.0.1
+2022-05-22T16:54:33.661+0200 [INFO]  agent: (LAN) joined: number_of_nodes=4
+2022-05-22T16:54:33.661+0200 [INFO]  agent: Join cluster completed. Synced with initial agents: cluster=LAN num_agents=4
+2022-05-22T16:54:33.661+0200 [INFO]  agent.server: Adding LAN server: server="vmi888028.contaboserver.net (Addr: tcp/172.17.0.1:8300) (DC: contabo)"
+2022-05-22T16:54:33.668+0200 [INFO]  agent.server: Found expected number of peers, attempting bootstrap: peers=172.17.0.1:8300,172.17.0.1:8300,172.17.0.1:8300
+2022-05-22T16:54:33.668+0200 [ERROR] agent.server: Failed to bootstrap cluster: error="found duplicate address in configuration: 172.17.0.1:8300"
+2022-05-22T16:54:34.597+0200 [WARN]  agent.server.memberlist.lan: memberlist: Got ping for unexpected node 'vmi888027.contaboserver.net' from=185.217.126.3:8301
+2022-05-22T16:54:35.098+0200 [WARN]  agent.server.memberlist.lan: memberlist: Got ping for unexpected node vmi888027.contaboserver.net from=185.217.126.3:40588
+2022-05-22T16:54:35.098+0200 [ERROR] agent.server.memberlist.lan: memberlist: Failed fallback ping: EOF
+2022-05-22T16:54:35.099+0200 [WARN]  agent.server.memberlist.lan: memberlist: Got ping for unexpected node 'vmi888027.contaboserver.net' from=185.217.126.3:8301
+2022-05-22T16:54:35.597+0200 [INFO]  agent.server.memberlist.lan: memberlist: Suspect vmi888027.contaboserver.net has failed, no acks received
+2022-05-22T16:54:35.597+0200 [WARN]  agent.server.memberlist.lan: memberlist: Got ping for unexpected node 'vmi888028.contaboserver.net' from=185.217.126.3:8301
+2022-05-22T16:54:36.098+0200 [WARN]  agent.server.memberlist.lan: memberlist: Got ping for unexpected node vmi888028.contaboserver.net from=185.217.126.3:40590
+2022-05-22T16:54:36.098+0200 [ERROR] agent.server.memberlist.lan: memberlist: Failed fallback ping: EOF
+2022-05-22T16:54:37.598+0200 [INFO]  agent.server.memberlist.lan: memberlist: Suspect vmi888028.contaboserver.net has failed, no acks received
+2022-05-22T16:54:37.598+0200 [WARN]  agent.server.memberlist.lan: memberlist: Got ping for unexpected node 'vmi888028.contaboserver.net' from=185.217.126.3:8301
+2022-05-22T16:54:38.100+0200 [WARN]  agent.server.memberlist.lan: memberlist: Got ping for unexpected node vmi888028.contaboserver.net from=185.217.126.3:40592
+2022-05-22T16:54:38.101+0200 [ERROR] agent.server.memberlist.lan: memberlist: Failed fallback ping: EOF
+2022-05-22T16:54:39.597+0200 [INFO]  agent.server.memberlist.lan: memberlist: Marking vmi888027.contaboserver.net as failed, suspect timeout reached (0 peer confirmations)
+2022-05-22T16:54:39.598+0200 [INFO]  agent.server.serf.lan: serf: EventMemberFailed: vmi888027.contaboserver.net 172.17.0.1
+2022-05-22T16:54:39.598+0200 [INFO]  agent.server: Removing LAN server: server="vmi888027.contaboserver.net (Addr: tcp/172.17.0.1:8300) (DC: contabo)"
+2022-05-22T16:54:40.306+0200 [WARN]  agent.server.raft: no known peers, aborting election
+2022-05-22T16:54:40.598+0200 [INFO]  agent.server.memberlist.lan: memberlist: Suspect vmi888028.contaboserver.net has failed, no acks received
+2022-05-22T16:54:40.712+0200 [ERROR] agent.anti_entropy: failed to sync remote state: error="No cluster leader"
+2022-05-22T16:54:41.596+0200 [WARN]  agent.server.memberlist.lan: memberlist: Got ping for unexpected node 'vmi888028.contaboserver.net' from=185.217.126.3:8301
+2022-05-22T16:54:41.599+0200 [INFO]  agent.server.memberlist.lan: memberlist: Marking vmi888028.contaboserver.net as failed, suspect timeout reached (0 peer confirmations)
+2022-05-22T16:54:41.599+0200 [INFO]  agent.server.serf.lan: serf: EventMemberFailed: vmi888028.contaboserver.net 172.17.0.1
+2022-05-22T16:54:41.599+0200 [INFO]  agent.server: Removing LAN server: server="vmi888028.contaboserver.net (Addr: tcp/172.17.0.1:8300) (DC: contabo)"
+2022-05-22T16:54:42.098+0200 [WARN]  agent.server.memberlist.lan: memberlist: Got ping for unexpected node vmi888028.contaboserver.net from=185.217.126.3:40594
+2022-05-22T16:54:42.098+0200 [ERROR] agent.server.memberlist.lan: memberlist: Failed fallback ping: EOF
+2022-05-22T16:54:45.597+0200 [INFO]  agent.server.memberlist.lan: memberlist: Suspect vmi888028.contaboserver.net has failed, no acks received
+2022-05-22T16:55:03.596+0200 [INFO]  agent.server.serf.lan: serf: attempting reconnect to vmi888028.contaboserver.net 172.17.0.1:8301
+2022-05-22T16:55:08.570+0200 [ERROR] agent: Coordinate update error: error="No cluster leader"
+2022-05-22T16:55:11.961+0200 [ERROR] agent.anti_entropy: failed to sync remote state: error="No cluster leader"
+2022-05-22T16:55:32.966+0200 [ERROR] agent: Coordinate update error: error="No cluster leader"
+2022-05-22T16:55:33.599+0200 [INFO]  agent.server.serf.lan: serf: attempting reconnect to vmi888027.contaboserver.net 172.17.0.1:8301
+2022-05-22T16:55:45.169+0200 [ERROR] agent.anti_entropy: failed to sync remote state: error="No cluster leader"
+2022-05-22T16:56:03.601+0200 [INFO]  agent.server.serf.lan: serf: attempting reconnect to vmi888027.contaboserver.net 172.17.0.1:8301
+2022-05-22T16:56:06.605+0200 [ERROR] agent: Coordinate update error: error="No cluster leader"
+2022-05-22T16:56:10.748+0200 [ERROR] agent.anti_entropy: failed to sync remote state: error="No cluster leader"
+^C2022-05-22T16:56:30.896+0200 [INFO]  agent: Caught: signal=interrupt
+2022-05-22T16:56:30.896+0200 [INFO]  agent: Graceful shutdown disabled. Exiting
+2022-05-22T16:56:30.897+0200 [INFO]  agent: Requesting shutdown
+2022-05-22T16:56:30.897+0200 [INFO]  agent.server: shutting down server
+2022-05-22T16:56:30.897+0200 [WARN]  agent.server.serf.lan: serf: Shutdown without a Leave
+2022-05-22T16:56:30.897+0200 [ERROR] agent: Coordinate update error: error="No cluster leader"
+2022-05-22T16:56:30.898+0200 [INFO]  agent.server: shutting down Connect CA roots monitor
+2022-05-22T16:56:30.898+0200 [WARN]  agent.server.serf.wan: serf: Shutdown without a Leave
+2022-05-22T16:56:30.898+0200 [INFO]  agent.router.manager: shutting down
+2022-05-22T16:56:30.898+0200 [INFO]  agent.router.manager: shutting down
+2022-05-22T16:56:30.899+0200 [INFO]  agent: consul server down
+2022-05-22T16:56:30.899+0200 [INFO]  agent: shutdown complete
+2022-05-22T16:56:30.899+0200 [INFO]  agent: Stopping server: protocol=DNS address=0.0.0.0:8600 network=tcp
+2022-05-22T16:56:30.899+0200 [INFO]  agent: Stopping server: protocol=DNS address=0.0.0.0:8600 network=udp
+2022-05-22T16:56:30.899+0200 [INFO]  agent: Stopping server: address=[::]:8500 network=tcp protocol=http
+2022-05-22T16:56:30.900+0200 [INFO]  agent: Waiting for endpoints to shut down
+2022-05-22T16:56:30.900+0200 [INFO]  agent: Endpoints down
+2022-05-22T16:56:30.901+0200 [INFO]  agent: Exit code: code=1

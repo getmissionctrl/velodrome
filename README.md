@@ -2,7 +2,13 @@
 Sets up Consul & Nomad Servers & Clients given an inventory.
 
 
-## Instructions
+## Instructions on setup on existing servers
+
+```
+ ansible-playbook setup.yml -i datacenters/contabo/inventory -u root -e @secrets/secrets.yml
+```
+
+## Instructions on new server
 When a new server is added:
 * Add to appropriate inventory place
 * Add SSH key:
@@ -34,11 +40,11 @@ sudo systemctl reload ssh
 Run ansible:
 
 ```
-ansible-playbook setup.yml -i contabo_inventory -u root
+ ansible-playbook setup.yml -i datacenters/contabo/inventory -u root -e @secrets/secrets.yml
 ```
 
 ## TODO
-- [ ] Harden servers
+- [x] Harden servers
     - [x] Add SSH Key login
     - [x] Setup UFW firewall rules
     - [x] Template to allow hosts in cluster access to all ports
@@ -47,10 +53,11 @@ ansible-playbook setup.yml -i contabo_inventory -u root
     - [x] Run firewall script
 - [x] Install all required software
 - [ ] Consul setup
-    - [ ] Setup cluster secrets
-    - [ ] Template configs
-    - [ ] Add configs to cluster
-    - [ ] Systemctl script & startup
+    - [x] Setup cluster secrets
+    - [x] Template configs
+    - [x] Add configs to cluster
+    - [x] Systemctl script & startup
+    - [ ] Verify cluster setup
 - [ ] Nomad setup
     - [ ] Setup cluster secrets
     - [ ] Template configs

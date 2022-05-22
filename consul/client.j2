@@ -1,0 +1,16 @@
+datacenter = "dc1"
+data_dir = "/opt/consul"
+encrypt = "{{ CONSUL_GOSSIP_KEY }}"
+verify_incoming = true
+verify_outgoing = true
+verify_server_hostname = false
+
+server = false
+
+ca_file = "/etc/consul.d/certs/consul-agent-ca.pem"
+
+auto_encrypt {
+  tls = true
+}
+
+retry_join = [{% for result in hostvars[inventory_hostname]["groups"]["consul_servers"] %}"{{ result }}", {% endfor %}]
