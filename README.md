@@ -31,6 +31,12 @@ Reload ssh:
 sudo systemctl reload ssh
 ```
 
+Run ansible:
+
+```
+ansible-playbook setup.yml -i inventory -u root
+```
+
 ## TODO
 - [ ] Harden servers
     - [x] Add SSH Key login
