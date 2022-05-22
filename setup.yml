@@ -3,81 +3,81 @@
   become: yes
 
   tasks:
-    - name: Print all available facts
-      ansible.builtin.debug:
-        var: vars #hostvars[inventory_hostname]["groups"]["all"]
-    # - name: Set authorized key taken from file
-    #   authorized_key:
-    #     user: root
-    #     state: present
-    #     key: "{{ lookup('file', 'id_rsa.pub') }}"
-    # - name: Add HCP signing key
-    #   ansible.builtin.apt_key:
-    #     url: https://apt.releases.hashicorp.com/gpg
-    #     state: present
-    # - name: Add Docker signing key
-    #   ansible.builtin.apt_key:
-    #     url: https://download.docker.com/linux/ubuntu/gpg
-    #     state: present
-    # - name: Add hcp into sources list
-    #   ansible.builtin.apt_repository:
-    #     repo: deb https://apt.releases.hashicorp.com jammy main
-    #     state: present
-    # - name: Add docker repository into sources list
-    #   ansible.builtin.apt_repository:
-    #     repo: deb https://download.docker.com/linux/ubuntu jammy stable 
-    #     state: present
-    # - name: ensure apt cache is updated
-    #   action: apt update_cache=yes
+    # - name: Print all available facts
+    #   ansible.builtin.debug:
+    #     var: vars #hostvars[inventory_hostname]["groups"]["all"]
+    - name: Set authorized key taken from file
+      authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', 'id_rsa.pub') }}"
+    - name: Add HCP signing key
+      ansible.builtin.apt_key:
+        url: https://apt.releases.hashicorp.com/gpg
+        state: present
+    - name: Add Docker signing key
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+    - name: Add hcp into sources list
+      ansible.builtin.apt_repository:
+        repo: deb https://apt.releases.hashicorp.com jammy main
+        state: present
+    - name: Add docker repository into sources list
+      ansible.builtin.apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu jammy stable 
+        state: present
+    - name: ensure apt cache is updated
+      action: apt update_cache=yes
 
-    # - name: Upgrade the OS (apt-get dist-upgrade)
-    #   apt:
-    #     upgrade: dist
+    - name: Upgrade the OS (apt-get dist-upgrade)
+      apt:
+        upgrade: dist
 
-    # - name: ensure all software is installed
-    #   action: apt name={{item}}
-    #   with_items:
-    #     - wget
-    #     - curl
-    #     - ca-certificates
-    #     - gnupg
-    #     - lsb-release
-    #     - nomad
-    #     - consul
-    #     - vault
-    #     - docker-ce
-    #     - docker-ce-cli
-    #     - containerd.io
-    #     - docker-compose-plugin
+    - name: ensure all software is installed
+      action: apt name={{item}}
+      with_items:
+        - wget
+        - curl
+        - ca-certificates
+        - gnupg
+        - lsb-release
+        - nomad
+        - consul
+        - vault
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        - docker-compose-plugin
 
-    # - name: add group consul
-    #   group: name='consul'
+    - name: add group consul
+      group: name='consul'
 
-    # - name: add consul user
-    #   user: name='consul' groups="consul"
+    - name: add consul user
+      user: name='consul' groups="consul"
 
-    # - name: Creates config dir
-    #   file:
-    #     path: /etc/consul.d
-    #     state: directory
-    #     owner: consul
-    #     group: consul
-    #     mode: 0755
-    # - name: Creates certs dir
-    #   file:
-    #     path: /etc/consul.d/certs
-    #     state: directory
-    #     owner: consul
-    #     group: consul
-    #     mode: 0755
+    - name: Creates config dir
+      file:
+        path: /etc/consul.d
+        state: directory
+        owner: consul
+        group: consul
+        mode: 0755
+    - name: Creates certs dir
+      file:
+        path: /etc/consul.d/certs
+        state: directory
+        owner: consul
+        group: consul
+        mode: 0755
 
-    # - name: Creates data dir
-    #   file:
-    #     path: /opt/consul
-    #     state: directory
-    #     owner: consul
-    #     group: consul
-    #     mode: 0755
+    - name: Creates data dir
+      file:
+        path: /opt/consul
+        state: directory
+        owner: consul
+        group: consul
+        mode: 0755
     # - name: copy ufw script
     #   template:
     #     src: ufw-setup.j2
@@ -87,18 +87,18 @@
     #   ansible.builtin.shell: /root/ufw-setup.sh
     #   args:
     #     executable: /bin/bash
-#     - name: copy consul agent ca 
-#       copy:
-#         src: secrets/consul/consul-agent-ca.pem
-#         dest: /etc/consul.d/certs/consul-agent-ca.pem
-#         owner: consul
-#         group: consul
-#         mode: 0644
-    # - name: copy consul service file
-    #   copy:
-    #     src: consul/consul.service
-    #     dest: /etc/systemd/system/consul.service
-    #     mode: 0755
+    - name: copy consul agent ca 
+      copy:
+        src: secrets/consul/consul-agent-ca.pem
+        dest: /etc/consul.d/certs/consul-agent-ca.pem
+        owner: consul
+        group: consul
+        mode: 0644
+    - name: copy consul service file
+      copy:
+        src: consul/consul.service
+        dest: /etc/systemd/system/consul.service
+        mode: 0755
 
 - hosts: clients
   become: yes
@@ -110,6 +110,113 @@
         owner: consul
         group: consul
         mode: 0644
+    - name: Creates config dir
+      file:
+        path: /etc/nomad.d
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+    - name: Creates certs dir
+      file:
+        path: /etc/nomad.d/certs
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Creates data dir
+      file:
+        path: /opt/nomad
+        state: directory
+        owner: root
+        group: root
+        mode: 0700
+    - name: copy nomad ca
+      copy:
+        src: secrets/nomad/nomad-ca.pem
+        dest: /etc/nomad.d/certs/nomad-ca.pem
+        owner: root
+        group: root
+        mode: 0755
+    - name: copy client.pem
+      copy:
+        src: secrets/nomad/client.pem
+        dest: /etc/nomad.d/certs/client.pem
+        owner: root
+        group: root
+        mode: 0755
+    - name: copy client-key.pem
+      copy:
+        src: secrets/nomad/client-key.pem
+        dest: /etc/nomad.d/certs/client-key.pem
+        owner: root
+        group: root
+        mode: 0755
+    - name: copy config
+      copy:
+        src: nomad/client.hcl
+        dest: /etc/nomad.d/nomad.hcl
+        owner: root
+        group: root
+        mode: 0755
+    - name: copy service
+      copy:
+        src: nomad/nomad-client.service
+        dest: /etc/systemd/system/nomad.service
+        mode: 0755
+
+- hosts: nomad_servers
+  become: yes
+
+  tasks:
+    - name: Creates config dir
+      file:
+        path: /etc/nomad.d
+        state: directory
+        owner: nomad
+        group: nomad
+        mode: 0755
+    - name: Creates certs dir
+      file:
+        path: /etc/nomad.d/certs
+        state: directory
+        owner: nomad
+        group: nomad
+        mode: 0755
+
+    - name: Creates data dir
+      file:
+        path: /opt/nomad
+        state: directory
+        owner: nomad
+        group: nomad
+        mode: 0755
+    - name: copy nomad ca
+      copy:
+        src: secrets/nomad/nomad-ca.pem
+        dest: /etc/nomad.d/certs/nomad-ca.pem
+        mode: 0755
+    - name: copy server.pem
+      copy:
+        src: secrets/nomad/server.pem
+        dest: /etc/nomad.d/certs/server.pem
+        mode: 0755
+    - name: copy server-key.pem
+      copy:
+        src: secrets/nomad/server-key.pem
+        dest: /etc/nomad.d/certs/server-key.pem
+        mode: 0755
+    - name: copy config
+      copy:
+        src: nomad/server.hcl
+        dest: /etc/nomad.d/nomad.hcl
+        mode: 0755
+    - name: copy service
+      copy:
+        src: nomad/nomad-server.service
+        dest: /etc/systemd/system/nomad.service
+        mode: 0755
 
 - hosts: consul_servers
   become: yes
@@ -153,3 +260,8 @@
         state: restarted
         daemon_reload: yes
         name: consul
+    - name: Restart nomad service
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: yes
+        name: nomad
