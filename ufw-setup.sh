@@ -109,4 +109,6 @@ echo ''
 echo "Total rules deleted: ${cfufw_deleted}"
 echo "Total rules created: ${cfufw_created}"
 echo "Total rules ignored: ${cfufw_ignored}"
+ufw --force enable
 echo 'Done.'
+

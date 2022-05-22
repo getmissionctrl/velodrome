@@ -1,23 +1,31 @@
 ---
-- hosts: all
+- hosts: all #all
   become: yes
   # run with ansible-playbook install.yml -i hosts --key-file "~/dev/chaordic/cddhub-demo2.pem" -u [your username] --extra-vars "psql_pass=password"
   # certbot certonly --manual -d lexpert-test.chaordic.io
-   #[]/etc/letsencrypt/live/lexpert-test.chaordic.io/fullchain.pem
-   #Your key file has been saved at:
-   #/etc/letsencrypt/live/lexpert-test.chaordic.io/privkey.pem
+  #[]/etc/letsencrypt/live/lexpert-test.chaordic.io/fullchain.pem
+  #Your key file has been saved at:
+  #/etc/letsencrypt/live/lexpert-test.chaordic.io/privkey.pem
   tasks:
+    - name: Print all available facts
+      ansible.builtin.debug:
+        var: inventory_hostname
+    - name: Set authorized key taken from file
+      authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', 'id_rsa.pub') }}"
     - name: Add HCP signing key
       ansible.builtin.apt_key:
-        url: https://apt.releases.hashicorp.com/gpg 
+        url: https://apt.releases.hashicorp.com/gpg
         state: present
     - name: Add Docker signing key
       ansible.builtin.apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg 
+        url: https://download.docker.com/linux/ubuntu/gpg
         state: present
     - name: Add hcp into sources list
       ansible.builtin.apt_repository:
-        repo: deb https://apt.releases.hashicorp.com jammy main 
+        repo: deb https://apt.releases.hashicorp.com jammy main
         state: present
     - name: Add docker repository into sources list
       ansible.builtin.apt_repository:
@@ -26,21 +34,25 @@
     - name: ensure apt cache is updated
       action: apt update_cache=yes
 
+    - name: Upgrade the OS (apt-get dist-upgrade)
+      apt:
+        upgrade: dist
+
     - name: ensure all software is installed
       action: apt name={{item}}
       with_items:
-      - wget
-      - curl
-      - ca-certificates
-      - gnupg
-      - lsb-release
-      - nomad
-      - consul
-      - vault
-      - docker-ce 
-      - docker-ce-cli 
-      - containerd.io 
-      - docker-compose-plugin
+        - wget
+        - curl
+        - ca-certificates
+        - gnupg
+        - lsb-release
+        - nomad
+        - consul
+        - vault
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        - docker-compose-plugin
 
     - name: add group consul
       group: name='consul'
@@ -75,3 +87,7 @@
         src: ufw-setup.sh
         dest: /root/ufw-setup.sh
         mode: 0755
+    - name: Enable UFW
+      ansible.builtin.shell: /root/ufw-setup.sh
+      args:
+        executable: /bin/bash
