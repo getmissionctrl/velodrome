@@ -1,0 +1,6 @@
+
+[consul-servers]
+185.217.126.3
+[nomad-servers]
+185.217.126.3
+[clients]
