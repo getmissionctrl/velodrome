@@ -30,6 +30,8 @@ override.tf.json
 .gitsecret/keys/random_seed
 !*.secret
 secrets/secrets.ymlsecrets/consul/consul-agent-ca-key.pemsecrets/consul/consul-agent-ca.pemsecrets/consul/dc1-server-consul-0-key.pemsecrets/consul/dc1-server-consul-0.pem
-secrets/
+secrets/*.yml
+secrets/**/*.pem
+secrets/**/*.csr
 
 .envrc
