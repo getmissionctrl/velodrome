@@ -1,6 +1,15 @@
 
 [consul_servers]
+54.144.47.173 private_ip=172.31.18.155
+23.22.160.244 private_ip=172.31.16.145
+54.160.206.160 private_ip=172.31.22.40
+[consul_servers:vars]
+servers='"172.31.18.155", "172.31.16.145", "172.31.22.40"'
 
 [nomad_servers]
 
 [clients]
+3.90.208.213 private_ip=172.31.19.90
+34.228.157.155 private_ip=172.31.16.75
+[clients:vars]
+servers='"172.31.18.155", "172.31.16.145", "172.31.22.40"'

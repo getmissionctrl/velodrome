@@ -23,6 +23,12 @@ git secret
  ansible-playbook setup.yml -i datacenters/contabo/inventory -u root -e @secrets/secrets.yml
 ```
 
+On AWS: 
+
+```
+ ansible-playbook setup.yml -i datacenters/aws/inventory -u ubuntu -e @secrets/secrets.yml --private-key venue-dev.pem
+```
+
 ## Instructions on new server
 When a new server is added:
 * Add to appropriate inventory place

@@ -35,3 +35,5 @@ secrets/**/*.pem
 secrets/**/*.csr
 
 .envrc
+*.pem
+*.csr
