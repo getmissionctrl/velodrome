@@ -1,6 +1,21 @@
 # Venue Cluster
 Sets up Consul & Nomad Servers & Clients given an inventory.
 
+## Instructions for repo
+You need git secret
+
+```
+# add file
+git secret add [file]
+# make available to user
+git secret tell [email of user in gnupg keychain]
+# hide secrets
+git secret hide
+# show secret
+git secret reveal
+# other to see commands
+git secret
+```
 
 ## Instructions on setup on existing servers
 

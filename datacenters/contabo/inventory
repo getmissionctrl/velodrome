@@ -1,19 +1,18 @@
-
 [consul_servers]
-vmi887138.contaboserver.net
-vmi888027.contaboserver.net
-vmi888028.contaboserver.net
-#185.217.126.3
-#45.94.58.204
-#45.94.58.185
+185.217.126.3
+45.94.58.204
+45.94.58.185
 [nomad_servers]
-vmi887138.contaboserver.net
-vmi888027.contaboserver.net
-vmi888028.contaboserver.net
+185.217.126.3
+45.94.58.204
+45.94.58.185
 [clients]
-vmi888029.contaboserver.net
-vmi888026.contaboserver.net
-# 185.169.252.111
-# 45.94.58.160
-
+185.169.252.111
+45.94.58.160
 # 185.217.126.3 only has 50GB NVME, others have 100GB
+
+# vmi887138.contaboserver.net
+# vmi888027.contaboserver.net
+# vmi888028.contaboserver.net
+# vmi888029.contaboserver.net
+# vmi888026.contaboserver.net
