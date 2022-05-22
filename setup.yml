@@ -1,5 +1,5 @@
 ---
-- hosts: all #all
+- hosts: all 
   become: yes
   # run with ansible-playbook install.yml -i hosts --key-file "~/dev/chaordic/cddhub-demo2.pem" -u [your username] --extra-vars "psql_pass=password"
   # certbot certonly --manual -d lexpert-test.chaordic.io
@@ -9,82 +9,82 @@
   tasks:
     - name: Print all available facts
       ansible.builtin.debug:
-        var: inventory_hostname
-    - name: Set authorized key taken from file
-      authorized_key:
-        user: root
-        state: present
-        key: "{{ lookup('file', 'id_rsa.pub') }}"
-    - name: Add HCP signing key
-      ansible.builtin.apt_key:
-        url: https://apt.releases.hashicorp.com/gpg
-        state: present
-    - name: Add Docker signing key
-      ansible.builtin.apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
-    - name: Add hcp into sources list
-      ansible.builtin.apt_repository:
-        repo: deb https://apt.releases.hashicorp.com jammy main
-        state: present
-    - name: Add docker repository into sources list
-      ansible.builtin.apt_repository:
-        repo: deb https://download.docker.com/linux/ubuntu jammy stable 
-        state: present
-    - name: ensure apt cache is updated
-      action: apt update_cache=yes
+        var: hostvars[inventory_hostname]["groups"]["all"]
+    # - name: Set authorized key taken from file
+    #   authorized_key:
+    #     user: root
+    #     state: present
+    #     key: "{{ lookup('file', 'id_rsa.pub') }}"
+    # - name: Add HCP signing key
+    #   ansible.builtin.apt_key:
+    #     url: https://apt.releases.hashicorp.com/gpg
+    #     state: present
+    # - name: Add Docker signing key
+    #   ansible.builtin.apt_key:
+    #     url: https://download.docker.com/linux/ubuntu/gpg
+    #     state: present
+    # - name: Add hcp into sources list
+    #   ansible.builtin.apt_repository:
+    #     repo: deb https://apt.releases.hashicorp.com jammy main
+    #     state: present
+    # - name: Add docker repository into sources list
+    #   ansible.builtin.apt_repository:
+    #     repo: deb https://download.docker.com/linux/ubuntu jammy stable 
+    #     state: present
+    # - name: ensure apt cache is updated
+    #   action: apt update_cache=yes
 
-    - name: Upgrade the OS (apt-get dist-upgrade)
-      apt:
-        upgrade: dist
+    # - name: Upgrade the OS (apt-get dist-upgrade)
+    #   apt:
+    #     upgrade: dist
 
-    - name: ensure all software is installed
-      action: apt name={{item}}
-      with_items:
-        - wget
-        - curl
-        - ca-certificates
-        - gnupg
-        - lsb-release
-        - nomad
-        - consul
-        - vault
-        - docker-ce
-        - docker-ce-cli
-        - containerd.io
-        - docker-compose-plugin
+    # - name: ensure all software is installed
+    #   action: apt name={{item}}
+    #   with_items:
+    #     - wget
+    #     - curl
+    #     - ca-certificates
+    #     - gnupg
+    #     - lsb-release
+    #     - nomad
+    #     - consul
+    #     - vault
+    #     - docker-ce
+    #     - docker-ce-cli
+    #     - containerd.io
+    #     - docker-compose-plugin
 
-    - name: add group consul
-      group: name='consul'
+    # - name: add group consul
+    #   group: name='consul'
 
-    - name: add consul user
-      user: name='consul' groups="consul"
+    # - name: add consul user
+    #   user: name='consul' groups="consul"
 
-    - name: Creates config dir
-      file:
-        path: /etc/consul.d
-        state: directory
-        owner: consul
-        group: consul
-        mode: 0755
-    - name: Creates certs dir
-      file:
-        path: /etc/consul.d/certs
-        state: directory
-        owner: consul
-        group: consul
-        mode: 0755
+    # - name: Creates config dir
+    #   file:
+    #     path: /etc/consul.d
+    #     state: directory
+    #     owner: consul
+    #     group: consul
+    #     mode: 0755
+    # - name: Creates certs dir
+    #   file:
+    #     path: /etc/consul.d/certs
+    #     state: directory
+    #     owner: consul
+    #     group: consul
+    #     mode: 0755
 
-    - name: Creates data dir
-      file:
-        path: /opt/consul
-        state: directory
-        owner: consul
-        group: consul
-        mode: 0755
+    # - name: Creates data dir
+    #   file:
+    #     path: /opt/consul
+    #     state: directory
+    #     owner: consul
+    #     group: consul
+    #     mode: 0755
     - name: copy ufw script
-      copy:
-        src: ufw-setup.sh
+      template:
+        src: ufw-setup.j2
         dest: /root/ufw-setup.sh
         mode: 0755
     - name: Enable UFW

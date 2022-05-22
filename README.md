@@ -34,14 +34,14 @@ sudo systemctl reload ssh
 Run ansible:
 
 ```
-ansible-playbook setup.yml -i inventory -u root
+ansible-playbook setup.yml -i contabo_inventory -u root
 ```
 
 ## TODO
 - [ ] Harden servers
     - [x] Add SSH Key login
     - [x] Setup UFW firewall rules
-    - [ ] Template to allow hosts in cluster access to all ports
+    - [x] Template to allow hosts in cluster access to all ports
     - [x] Restart firewall
     - [x] Disable password login
     - [x] Run firewall script

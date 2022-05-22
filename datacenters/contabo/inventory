@@ -1,12 +1,14 @@
 
-[consul-servers]
+[consul_servers]
 185.217.126.3
-[nomad-servers]
-185.217.126.3
-[clients]
-185.169.252.111
 45.94.58.204
 45.94.58.185
+[nomad_servers]
+185.217.126.3
+45.94.58.204
+45.94.58.185
+[clients]
+185.169.252.111
 45.94.58.160
 
 # 185.217.126.3 only has 50GB NVME, others have 100GB

@@ -104,7 +104,9 @@ if [ $cfufw_nonew -eq 0 ]; then
 
     [ -e /tmp/cloudflare-ips.txt ] && rm /tmp/cloudflare-ips.txt
 fi
-
+{% for result in hostvars[inventory_hostname]["groups"]["all"] %}
+ufw allow from {{ result }}
+{% endfor %}
 echo ''
 echo "Total rules deleted: ${cfufw_deleted}"
 echo "Total rules created: ${cfufw_created}"
