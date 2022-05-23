@@ -161,8 +161,8 @@
         group: root
         mode: 0755
     - name: copy service
-      copy:
-        src: nomad/nomad-client.service
+      template:
+        src: nomad/nomad.j2
         dest: /etc/systemd/system/nomad.service
         mode: 0755
 
@@ -208,13 +208,13 @@
         dest: /etc/nomad.d/certs/server-key.pem
         mode: 0755
     - name: copy config
-      copy:
-        src: nomad/server.hcl
+      template:
+        src: nomad/server.j2
         dest: /etc/nomad.d/nomad.hcl
         mode: 0755
     - name: copy service
-      copy:
-        src: nomad/nomad-server.service
+      template:
+        src: nomad/nomad.j2
         dest: /etc/systemd/system/nomad.service
         mode: 0755
 

@@ -4,6 +4,7 @@ data_dir = "/opt/nomad"
 # Enable the server
 server {
   enabled = true
+  encrypt = "{{ NOMAD_GOSSIP_KEY }}"
 
   # Self-elect, should be 3 or 5 for production
   bootstrap_expect = 3
@@ -19,5 +20,5 @@ tls {
   key_file  = "/etc/nomad.d/certs/server-key.pem"
 
   verify_server_hostname = true
-  verify_https_client    = true
+  verify_https_client    = false # verifies browsers connecting
 }
