@@ -1,14 +1,21 @@
 [consul_servers]
-185.217.126.3
-45.94.58.204
-45.94.58.185
+185.217.126.3 private_ip=185.217.126.3
+45.94.58.204 private_ip=45.94.58.204
+45.94.58.185 private_ip=45.94.58.185
+[consul_servers:vars]
+servers='"185.217.126.3", "45.94.58.204", "45.94.58.185"'
 [nomad_servers]
 185.217.126.3
 45.94.58.204
 45.94.58.185
+[nomad_servers:vars]
+nomad_user=nomad
 [clients]
-185.169.252.111
-45.94.58.160
+185.169.252.111 private_ip=185.169.252.111 
+45.94.58.160 private_ip=45.94.58.160
+[clients:vars]
+servers='"185.217.126.3", "45.94.58.204", "45.94.58.185"'
+nomad_user=root
 # 185.217.126.3 only has 50GB NVME, others have 100GB
 
 # vmi887138.contaboserver.net

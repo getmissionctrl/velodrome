@@ -9,6 +9,14 @@ server {
   # Self-elect, should be 3 or 5 for production
   bootstrap_expect = 3
 }
+bind_addr = "{{ private_ip }}"
+
+#advertise {
+  # Defaults to the first private IP address.
+#  http = "{{ private_ip }}"
+#  rpc  = "{{ private_ip }}"
+#  serf = ""{{ private_ip }}"
+#}
 
 # Require TLS
 tls {
@@ -20,5 +28,5 @@ tls {
   key_file  = "/etc/nomad.d/certs/server-key.pem"
 
   verify_server_hostname = true
-  verify_https_client    = false # verifies browsers connecting
+  verify_https_client    = true # breaks browser, but necessary for authed access to CLI
 }

@@ -1,0 +1,31 @@
+---
+- hosts: all 
+  become: yes
+
+  tasks:
+    - name: Stop consul service
+      ansible.builtin.systemd:
+        state: stopped
+        daemon_reload: yes
+        name: consul
+    - name: Stop nomad service
+      ansible.builtin.systemd:
+        state: stopped
+        daemon_reload: yes
+        name: nomad
+    - name: Delete nomad data
+      file:
+        state: absent
+        path: /opt/nomad/
+    - name: Delete consul data
+      file:
+        state: absent
+        path: /opt/consul/
+    - name: Delete consul config
+      file:
+        state: absent
+        path: /etc/consul.d/
+    - name: Delete nomad config
+      file:
+        state: absent
+        path: /etc/nomad.d/
