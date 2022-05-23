@@ -255,6 +255,14 @@
   become: yes
 
   tasks:
+    - name: start consul service on boot
+      ansible.builtin.systemd:
+        enabled: yes
+        name: consul
+    - name: start nomad service on boot
+      ansible.builtin.systemd:
+        enabled: yes
+        name: nomad
     - name: Restart consul service
       ansible.builtin.systemd:
         state: restarted

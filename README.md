@@ -84,3 +84,14 @@ Run ansible:
     - [x] Template configs
     - [x] Add configs to cluster
     - [x] Systemctl scripts and startup
+- [ ] Observability
+    - [ ] Server health
+        - [ ] CPU monitor
+        - [ ] RAM usage monitor
+        - [ ] HD usage monitor
+    - [ ] Log aggregation of jobs
+    - [ ] Nomad metrics
+    - [ ] Prometheus metrics
+    - [ ] Job tracing
+- [ ] Networking
+    - [ ] Ingress to outside world with http/https
