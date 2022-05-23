@@ -73,14 +73,14 @@ Run ansible:
     - [x] Disable password login
     - [x] Run firewall script
 - [x] Install all required software
-- [ ] Consul setup
+- [x] Consul setup
     - [x] Setup cluster secrets
     - [x] Template configs
     - [x] Add configs to cluster
     - [x] Systemctl script & startup
-    - [ ] Verify cluster setup
-- [ ] Nomad setup
-    - [ ] Setup cluster secrets
-    - [ ] Template configs
-    - [ ] Add configs to cluster
-    - [ ] Systemctl scripts and startup
+    - [x] Verify cluster setup
+- [x] Nomad setup
+    - [x] Setup cluster secrets
+    - [x] Template configs
+    - [x] Add configs to cluster
+    - [x] Systemctl scripts and startup
