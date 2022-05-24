@@ -78,15 +78,15 @@
         owner: consul
         group: consul
         mode: 0755
-    - name: copy ufw script
-      template:
-        src: ufw-setup.j2
-        dest: /root/ufw-setup.sh
-        mode: 0755
-    - name: Enable UFW
-      ansible.builtin.shell: /root/ufw-setup.sh
-      args:
-        executable: /bin/bash
+    # - name: copy ufw script
+    #   template:
+    #     src: ufw-setup.j2
+    #     dest: /root/ufw-setup.sh
+    #     mode: 0755
+    # - name: Enable UFW
+    #   ansible.builtin.shell: /root/ufw-setup.sh
+    #   args:
+    #     executable: /bin/bash
     - name: copy consul agent ca 
       copy:
         src: secrets/consul/consul-agent-ca.pem

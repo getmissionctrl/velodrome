@@ -100,6 +100,7 @@ Run ansible:
     - [ ] Prometheus metrics
     - [ ] Job tracing
 - [ ] Networking
+    - [ ] Understand service mesh/ingress etc from consul
     - [ ] Ingress to outside world with http/https
     - [ ] Pull private docker images
 - [ ] Vault setup
