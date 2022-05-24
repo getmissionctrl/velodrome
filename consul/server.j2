@@ -19,6 +19,11 @@ auto_encrypt {
   allow_tls = true
 }
 
+
+connect {
+  enabled = true
+}
+
 retry_join = [{{servers}}]
 
 #retry_join = ["provider=aws tag_key=Name tag_value=consul"]

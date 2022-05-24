@@ -2,8 +2,14 @@
 Sets up Consul & Nomad Servers & Clients given an inventory.
 
 ## Instructions for repo
-You need git secret
+You need:
+* `git secret`
+* `nomad`
+* `consul`
+* `ansible`
 
+
+`git secret`-usage:
 ```
 # add file
 git secret add [file]
@@ -100,3 +106,5 @@ Run ansible:
     - [ ] setup cluster secrets
     - [ ] template configs
     - [ ] Systemctl script & startup
+    - [ ] Auto-unlock with script/ansible/terraform
+    - [ ] Integrate with Nomad
