@@ -95,3 +95,8 @@ Run ansible:
     - [ ] Job tracing
 - [ ] Networking
     - [ ] Ingress to outside world with http/https
+    - [ ] Pull private docker images
+- [ ] Vault setup
+    - [ ] setup cluster secrets
+    - [ ] template configs
+    - [ ] Systemctl script & startup
