@@ -11,8 +11,7 @@ servers='"10.0.0.6", "10.0.0.2", "10.0.0.3"'
 [nomad_servers:vars]
 nomad_user=nomad
 [clients]
-195.201.227.150 private_ip=10.0.0.5
-#195.201.101.121 private_ip=10.0.0.5
+167.235.23.223 private_ip=10.0.0.5
 167.235.73.180 private_ip=10.0.0.4
 [clients:vars]
 servers='"10.0.0.6", "10.0.0.2", "10.0.0.3"'
