@@ -29,11 +29,9 @@
         state: present
     - name: ensure apt cache is updated
       action: apt update_cache=yes
-
     - name: Upgrade the OS (apt-get dist-upgrade)
       apt:
         upgrade: dist
-
     - name: ensure all software is installed
       action: apt name={{item}}
       with_items:
@@ -49,13 +47,10 @@
         - docker-ce-cli
         - containerd.io
         - docker-compose-plugin
-
     - name: add group consul
       group: name='consul'
-
     - name: add consul user
       user: name='consul' groups="consul"
-
     - name: Creates config dir
       file:
         path: /etc/consul.d
@@ -78,15 +73,6 @@
         owner: consul
         group: consul
         mode: 0755
-    # - name: copy ufw script
-    #   template:
-    #     src: ufw-setup.j2
-    #     dest: /root/ufw-setup.sh
-    #     mode: 0755
-    # - name: Enable UFW
-    #   ansible.builtin.shell: /root/ufw-setup.sh
-    #   args:
-    #     executable: /bin/bash
     - name: copy consul agent ca 
       copy:
         src: secrets/consul/consul-agent-ca.pem
