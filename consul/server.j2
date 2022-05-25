@@ -26,9 +26,6 @@ connect {
 
 retry_join = [{{servers}}]
 
-#retry_join = ["provider=aws tag_key=Name tag_value=consul"]
-#retry_join = [{% for result in hostvars[inventory_hostname]["groups"]["consul_servers"] %}"{{ result }}", {% endfor %}]
-
 
 ui_config {
   enabled = true
