@@ -24,7 +24,7 @@ connect {
   enabled = true
 }
 
-retry_join = [{{servers}}]
+retry_join = [join_servers]
 
 
 ui_config {

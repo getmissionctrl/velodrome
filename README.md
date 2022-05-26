@@ -85,6 +85,7 @@ Run ansible:
     - [x] Add configs to cluster
     - [x] Systemctl script & startup
     - [x] Verify cluster setup
+    - [ ] Automate consul ACL bootstrap
 - [x] Nomad setup
     - [x] Setup cluster secrets
     - [x] Template configs
@@ -100,7 +101,7 @@ Run ansible:
     - [ ] Prometheus metrics
     - [ ] Job tracing
 - [ ] Networking
-    - [ ] Understand service mesh/ingress etc from consul
+    - [x] Understand service mesh/ingress etc from consul
     - [ ] Ingress to outside world with http/https
     - [ ] Pull private docker images
 - [ ] Vault setup
