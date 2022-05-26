@@ -39,3 +39,4 @@ secrets/**/*.csr
 *.csr
 
 pkg/config
+config

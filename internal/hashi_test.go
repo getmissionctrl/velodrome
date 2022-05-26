@@ -1,4 +1,4 @@
-package pkg
+package internal
 
 import (
 	"io/ioutil"
@@ -11,7 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestMakeConsulPolicies(t *testing.T) {
+func TestMakeConsulPoliciesAndHashiConfigs(t *testing.T) {
 	inv, err := readInventory(filepath.Join("testdata", "inventory"))
 	assert.NoError(t, err)
 	err = makeConsulPolicies(inv)
@@ -19,6 +19,7 @@ func TestMakeConsulPolicies(t *testing.T) {
 
 	defer func() {
 		os.RemoveAll(filepath.Join("config", "consul"))
+		os.RemoveAll(filepath.Join("config", "nomad"))
 	}()
 
 	bytes, err := ioutil.ReadFile(filepath.Join("config", "consul", "consul-policies.hcl"))
@@ -38,7 +39,7 @@ func TestMakeConsulPolicies(t *testing.T) {
 
 	inv, err = readInventory(filepath.Join("testdata", "inventory"))
 	assert.NoError(t, err)
-	makeConsulConfig(inv, "hetzner")
+	makeConfigs(inv, "hetzner")
 
 	serverBytes, err := ioutil.ReadFile(filepath.Join("config", "consul", "server.j2"))
 	assert.NoError(t, err)
@@ -47,6 +48,12 @@ func TestMakeConsulPolicies(t *testing.T) {
 	clientBytes, err := ioutil.ReadFile(filepath.Join("config", "consul", "client.j2"))
 	assert.NoError(t, err)
 	clientConf := string(clientBytes)
+
+	assertFileExists(t, filepath.Join("config", "nomad", "client.j2"))
+	assertFileExists(t, filepath.Join("config", "nomad", "server.j2"))
+	assertFileExists(t, filepath.Join("config", "nomad", "nomad-server.service"))
+
+	assertFileExists(t, filepath.Join("config", "nomad", "nomad-client.service"))
 
 	assert.Contains(t, clientConf, `datacenter = "hetzner"`)
 	assert.Contains(t, serverConf, `datacenter = "hetzner"`)
@@ -58,9 +65,9 @@ func TestMakeConsulPolicies(t *testing.T) {
 }
 
 func TestMakeSecrets(t *testing.T) {
-	// defer func() {
-	// 	os.RemoveAll(filepath.Join("config", "secrets"))
-	// }()
+	defer func() {
+		os.RemoveAll(filepath.Join("config", "secrets"))
+	}()
 	inv, err := readInventory(filepath.Join("testdata", "inventory"))
 	assert.NoError(t, err)
 	err = Secrets(inv, "dc1")
@@ -116,7 +123,6 @@ func TestMakeSecrets(t *testing.T) {
 	for _, path := range files {
 		assertFileExists(t, filepath.Join(nomadDir, path))
 	}
-
 }
 
 func assertFileExists(t *testing.T, path string) {

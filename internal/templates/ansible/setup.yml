@@ -3,14 +3,11 @@
   become: yes
 
   tasks:
-    # - name: Print all available facts
-    #   ansible.builtin.debug:
-    #     var: vars #hostvars[inventory_hostname]["groups"]["all"]
-    - name: Set authorized key taken from file
-      authorized_key:
-        user: root
-        state: present
-        key: "{{ lookup('file', 'id_rsa.pub') }}"
+    # - name: Set authorized key taken from file
+    #   authorized_key:
+    #     user: root
+    #     state: present
+    #     key: "{{ lookup('file', 'id_rsa.pub') }}"
     - name: Add HCP signing key
       ansible.builtin.apt_key:
         url: https://apt.releases.hashicorp.com/gpg
@@ -160,8 +157,8 @@
         group: root
         mode: 0755
     - name: copy service
-      template:
-        src: nomad/nomad.j2
+      copy:
+        src: nomad/nomad-client.service
         dest: /etc/systemd/system/nomad.service
         mode: 0755
 
@@ -212,8 +209,8 @@
         dest: /etc/nomad.d/nomad.hcl
         mode: 0755
     - name: copy service
-      template:
-        src: nomad/nomad.j2
+      copy:
+        src: nomad/nomad-server.service
         dest: /etc/systemd/system/nomad.service
         mode: 0755
 

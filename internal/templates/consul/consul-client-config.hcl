@@ -23,10 +23,10 @@ connect {
   enabled = true
 }
 
-retry_join = [{{servers}}]
+retry_join = [join_servers]
 
 acl {
   tokens {
-    agent  = "{{agent_token}}"
+    agent  = "{{CONSUL_AGENT_TOKEN}}"
   }
 }

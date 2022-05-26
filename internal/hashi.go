@@ -1,4 +1,4 @@
-package pkg
+package internal
 
 import (
 	"bytes"
@@ -33,8 +33,53 @@ var consulClient string
 //go:embed templates/nomad/cfssl.json
 var cfssl string
 
+//go:embed templates/nomad/client.j2
+var nomadClient string
+
+//go:embed templates/nomad/server.j2
+var nomadServer string
+
+//go:embed templates/nomad/nomad.service
+var nomadService string
+
+//go:embed templates/consul/consul.service
+var consulService string
+
+//go:embed templates/ansible/setup.yml
+var setupAnsible string
+
+//go:embed templates/ansible/destroy.yml
+var destroyAnsible string
+
+//go:embed templates/secrets.yml
+var secretsYml string
+
+type secretsConfig struct {
+	ConsulGossipKey        string
+	NomadGossipKey         string
+	NomadClientConsulToken string
+	NomadServerConsulToken string
+	ConsulAgentToken       string
+}
+
 //calculate bootstrap expect from files
-func configureConsul(inventoryFile, dcName string) error {
+func Configure(inventoryFile, dcName string) error {
+
+	err := os.MkdirAll(filepath.Join("config"), 0755)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(filepath.Join("config", "setup.yml"), []byte(strings.ReplaceAll(setupAnsible, "dc1", dcName)), 0755)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(filepath.Join("config", "destroy.yml"), []byte(destroyAnsible), 0755)
+	if err != nil {
+		return err
+	}
+
 	inv, err := readInventory(inventoryFile)
 	if err != nil {
 		return err
@@ -43,7 +88,7 @@ func configureConsul(inventoryFile, dcName string) error {
 	if err != nil {
 		return err
 	}
-	err = makeConsulConfig(inv, dcName)
+	err = makeConfigs(inv, dcName)
 	if err != nil {
 		return err
 	}
@@ -83,8 +128,7 @@ func makeConsulPolicies(inv *aini.InventoryData) error {
 
 	hostMap := make(map[string]string)
 	hosts := []string{}
-	for k, v := range inv.Groups {
-		fmt.Println(k)
+	for _, v := range inv.Groups {
 		for _, v := range v.Hosts {
 			if _, ok := hostMap[v.Vars["host_name"]]; !ok {
 				hosts = append(hosts, v.Vars["host_name"])
@@ -133,7 +177,7 @@ func getHosts(inv *aini.InventoryData, group string) []string {
 	return hosts
 }
 
-func makeConsulConfig(inv *aini.InventoryData, dcName string) error {
+func makeConfigs(inv *aini.InventoryData, dcName string) error {
 	hostMap := make(map[string]string)
 	hosts := ""
 	first := true
@@ -165,6 +209,35 @@ func makeConsulConfig(inv *aini.InventoryData, dcName string) error {
 	if err != nil {
 		return err
 	}
+	err = os.MkdirAll(filepath.Join("config", "nomad"), 0755)
+	if err != nil {
+		return err
+	}
+	nomadServerService := strings.ReplaceAll(nomadService, "nomad_user", "nomad")
+	nomadClientService := strings.ReplaceAll(nomadService, "nomad_user", "root")
+
+	err = os.WriteFile(filepath.Join("config", "nomad", "server.j2"), []byte(nomadServer), 0755)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(filepath.Join("config", "nomad", "client.j2"), []byte(nomadClient), 0755)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(filepath.Join("config", "nomad", "nomad-server.service"), []byte(nomadServerService), 0755)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(filepath.Join("config", "nomad", "nomad-client.service"), []byte(nomadClientService), 0755)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(filepath.Join("config", "consul", "consul.service"), []byte(consulService), 0755)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -174,6 +247,9 @@ func Secrets(inv *aini.InventoryData, dcName string) error {
 	if err != nil {
 		return err
 	}
+	consulSecretDir := filepath.Join("config", "secrets", "consul")
+	nomadSecretDir := filepath.Join("config", "secrets", "nomad")
+	err = os.MkdirAll(consulSecretDir, 0755)
 	consulGossipKey := strings.ReplaceAll(string(out.Bytes()), "\n", "")
 
 	var out2 bytes.Buffer
@@ -184,13 +260,28 @@ func Secrets(inv *aini.InventoryData, dcName string) error {
 	}
 	nomadGossipKey := strings.ReplaceAll(string(out2.Bytes()), "\n", "")
 
-	secretsYml := fmt.Sprintf(`CONSUL_GOSSIP_KEY: "%s"
-NOMAD_GOSSIP_KEY: "%s"
-`, consulGossipKey, nomadGossipKey)
+	var buf bytes.Buffer
+	tmpl, e := template.New("secrets-yaml").Parse(secretsYml)
+	if e != nil {
+		return e
+	}
+	err = tmpl.Execute(&buf, &secretsConfig{
+		ConsulGossipKey:        consulGossipKey,
+		NomadGossipKey:         nomadGossipKey,
+		NomadClientConsulToken: "TBD",
+		NomadServerConsulToken: "TBD",
+		ConsulAgentToken:       "TBD",
+	})
+	if err != nil {
+		return err
+	}
 
-	consulSecretDir := filepath.Join("config", "secrets", "consul")
-	nomadSecretDir := filepath.Join("config", "secrets", "nomad")
-	err = os.MkdirAll(consulSecretDir, 0755)
+	output := buf.Bytes()
+	err = os.WriteFile(filepath.Join("config", "secrets", "secrets.yml"), output, 0755)
+	if err != nil {
+		return err
+	}
+
 	if err != nil {
 		return err
 	}

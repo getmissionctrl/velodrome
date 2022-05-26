@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/chaordic-io/venue-cluster/internal"
 	"github.com/spf13/cobra"
 )
 
@@ -33,16 +34,30 @@ func main() {
 func bootstrap() *cobra.Command {
 	var inventoryFile string
 	var user string
+	var dcName string
 	cmd := &cobra.Command{
 		Use:   "bootstrap",
 		Short: "bootstraps a cluster",
 		Long:  `bootstraps a cluster`,
 		Run: func(cmd *cobra.Command, args []string) {
+			err := internal.Bootstrap(inventoryFile, dcName, user)
+			if err != nil {
+
+				fmt.Println(err)
+				os.Exit(1)
+			}
 
 		},
 	}
 
 	addFlags(cmd, &inventoryFile, &user)
+	cmd.Flags().StringVarP(&dcName, "datacentre", "d", "", "name of data center")
+
+	err := cmd.MarkFlagRequired("datacentre")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	return cmd
 }
@@ -68,9 +83,7 @@ func destroy() *cobra.Command {
 				}
 			}
 			if text == "yes\n" || text == "yes" {
-				fmt.Println(user)
-
-				fmt.Println("destroying all the things")
+				internal.Destroy(inventoryFile, user)
 				return
 			}
 			fmt.Println("Delete cancelled")
