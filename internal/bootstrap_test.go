@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -80,18 +81,21 @@ func TestMakeSecrets(t *testing.T) {
 	assert.NoError(t, err)
 	conf := string(bytes)
 
+	fmt.Println(conf)
+	fmt.Println("******")
+	fmt.Println(string(bytes2))
+
 	assert.Equal(t, conf, string(bytes2))
 
 	assert.Equal(t, 1, strings.Count(conf, "CONSUL_GOSSIP_KEY"))
 	assert.Equal(t, 1, strings.Count(conf, "NOMAD_GOSSIP_KEY"))
 
-	var theMap map[string]interface{}
+	var theMap map[string]string
 	err = yaml.Unmarshal([]byte(bytes), &theMap)
 	assert.NoError(t, err)
-	_, ok := theMap["CONSUL_GOSSIP_KEY"]
-	assert.True(t, ok)
-	_, ok = theMap["NOMAD_GOSSIP_KEY"]
-	assert.True(t, ok)
+	assert.NotEmpty(t, theMap["CONSUL_GOSSIP_KEY"])
+
+	assert.NotEmpty(t, theMap["NOMAD_GOSSIP_KEY"])
 
 	_, err = ioutil.ReadFile(filepath.Join("config", "secrets", "consul", "consul-agent-ca-key.pem"))
 	assert.NoError(t, err)

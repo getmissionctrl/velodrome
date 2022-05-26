@@ -277,9 +277,15 @@ func Secrets(inv *aini.InventoryData, dcName string) error {
 	}
 
 	output := buf.Bytes()
-	err = os.WriteFile(filepath.Join("config", "secrets", "secrets.yml"), output, 0755)
-	if err != nil {
-		return err
+
+	if _, err := os.Stat(filepath.Join("config", "secrets", "secrets.yml")); errors.Is(err, os.ErrNotExist) {
+		fmt.Println("write file")
+
+		fmt.Println(string(output))
+		err = os.WriteFile(filepath.Join("config", "secrets", "secrets.yml"), output, 0755)
+		if err != nil {
+			return err
+		}
 	}
 
 	if err != nil {
@@ -295,11 +301,6 @@ func Secrets(inv *aini.InventoryData, dcName string) error {
 			return err
 		}
 		err = runCmd(consulSecretDir, fmt.Sprintf("consul tls cert create -server -dc %s", dcName), os.Stdout)
-		if err != nil {
-			return err
-		}
-
-		err = os.WriteFile(filepath.Join("config", "secrets", "secrets.yml"), []byte(secretsYml), 0755)
 		if err != nil {
 			return err
 		}

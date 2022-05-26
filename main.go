@@ -36,9 +36,9 @@ func bootstrap() *cobra.Command {
 	var user string
 	var dcName string
 	cmd := &cobra.Command{
-		Use:   "bootstrap",
-		Short: "bootstraps a cluster",
-		Long:  `bootstraps a cluster`,
+		Use:   "up",
+		Short: "bootstraps and starts a cluster",
+		Long:  `bootstraps and starts a cluster`,
 		Run: func(cmd *cobra.Command, args []string) {
 			err := internal.Bootstrap(inventoryFile, dcName, user)
 			if err != nil {
@@ -46,7 +46,6 @@ func bootstrap() *cobra.Command {
 				fmt.Println(err)
 				os.Exit(1)
 			}
-
 		},
 	}
 
