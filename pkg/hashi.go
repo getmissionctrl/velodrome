@@ -30,6 +30,10 @@ var consulServer string
 //go:embed templates/consul/consul-client-config.hcl
 var consulClient string
 
+//go:embed templates/nomad/cfssl.json
+var cfssl string
+
+//calculate bootstrap expect from files
 func configureConsul(inventoryFile, dcName string) error {
 	inv, err := readInventory(inventoryFile)
 	if err != nil {
@@ -39,11 +43,11 @@ func configureConsul(inventoryFile, dcName string) error {
 	if err != nil {
 		return err
 	}
-	err = makeConsulConfig(dcName, inv)
+	err = makeConsulConfig(inv, dcName)
 	if err != nil {
 		return err
 	}
-	err = Secrets(dcName)
+	err = Secrets(inv, dcName)
 	if err != nil {
 		return err
 	}
@@ -116,7 +120,20 @@ func makeConsulPolicies(inv *aini.InventoryData) error {
 	return nil
 }
 
-func makeConsulConfig(dcName string, inv *aini.InventoryData) error {
+func getHosts(inv *aini.InventoryData, group string) []string {
+	hosts := []string{}
+	for k, v := range inv.Groups {
+		if k == group {
+			for hostname, _ := range v.Hosts {
+				hosts = append(hosts, hostname)
+			}
+			return hosts
+		}
+	}
+	return hosts
+}
+
+func makeConsulConfig(inv *aini.InventoryData, dcName string) error {
 	hostMap := make(map[string]string)
 	hosts := ""
 	first := true
@@ -151,7 +168,7 @@ func makeConsulConfig(dcName string, inv *aini.InventoryData) error {
 	return nil
 }
 
-func Secrets(dcName string) error {
+func Secrets(inv *aini.InventoryData, dcName string) error {
 	var out bytes.Buffer
 	err := runCmd("", "consul keygen", &out)
 	if err != nil {
@@ -200,6 +217,27 @@ NOMAD_GOSSIP_KEY: "%s"
 
 	if _, err := os.Stat(filepath.Join("config", "secrets", "nomad", "cli.pem")); errors.Is(err, os.ErrNotExist) {
 		err = runCmd(nomadSecretDir, "cfssl print-defaults csr | cfssl gencert -initca - | cfssljson -bare nomad-ca", os.Stdout)
+		if err != nil {
+			return err
+		}
+		hosts := getHosts(inv, "nomad_servers")
+		hostString := strings.Join(hosts, ",")
+
+		err = os.WriteFile(filepath.Join(nomadSecretDir, "cfssl.json"), []byte(cfssl), 0755)
+		if err != nil {
+			return err
+		}
+		err = runCmd(nomadSecretDir, fmt.Sprintf(`echo '{}' | cfssl gencert -ca=nomad-ca.pem -ca-key=nomad-ca-key.pem -config=cfssl.json -hostname="%s" - | cfssljson -bare server`, hostString), os.Stdout)
+		if err != nil {
+			return err
+		}
+
+		err = runCmd(nomadSecretDir, fmt.Sprintf(`echo '{}' | cfssl gencert -ca=nomad-ca.pem -ca-key=nomad-ca-key.pem -config=cfssl.json -hostname="%s" - | cfssljson -bare client`, hostString), os.Stdout)
+		if err != nil {
+			return err
+		}
+
+		err = runCmd(nomadSecretDir, fmt.Sprintf(`echo '{}' | cfssl gencert -ca=nomad-ca.pem -ca-key=nomad-ca-key.pem -config=cfssl.json -hostname="%s" - | cfssljson -bare cli`, hostString), os.Stdout)
 		if err != nil {
 			return err
 		}
