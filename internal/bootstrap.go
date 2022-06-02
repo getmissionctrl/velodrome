@@ -241,6 +241,8 @@ func makeConfigs(inv *aini.InventoryData, dcName string) error {
 	nomadClientService := strings.ReplaceAll(nomadService, "nomad_user", "root")
 
 	nomadServer = strings.ReplaceAll(nomadServer, "EXPECTS_NO", fmt.Sprintf("%v", len(getHosts(inv, "nomad_servers"))))
+	nomadServer = strings.ReplaceAll(nomadServer, "dc1", dcName)
+	nomadClient = strings.ReplaceAll(nomadClient, "dc1", dcName)
 
 	err = os.WriteFile(filepath.Join("config", "nomad", "server.j2"), []byte(nomadServer), 0755)
 	if err != nil {

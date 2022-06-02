@@ -11,8 +11,3 @@ service_prefix "" {
 }
 
 acl = "write"
-
-// consul acl policy create \
-//   -name "nomad-server" \
-//   -description "Nomad Server Policy" \
-//   -rules @nomad-server-policy.hcl
