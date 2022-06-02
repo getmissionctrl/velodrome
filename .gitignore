@@ -37,3 +37,6 @@ secrets/**/*.csr
 .envrc
 *.pem
 *.csr
+
+pkg/config
+config

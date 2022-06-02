@@ -12,7 +12,7 @@ service_prefix "" {
 
 # uncomment if using Consul KV with Consul Template
 key_prefix "" {
-   policy = read
+   policy = "read"
 }
 
 // consul acl policy create \

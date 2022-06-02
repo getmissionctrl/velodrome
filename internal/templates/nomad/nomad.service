@@ -14,8 +14,8 @@ After=consul.service
 
 # Nomad server should be run as the nomad user. Nomad clients
 # should be run as root
-User={{nomad_user}}
-Group={{nomad_user}}
+User=nomad_user
+Group=nomad_user
 
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStart=/usr/bin/nomad agent -config /etc/nomad.d

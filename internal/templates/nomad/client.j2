@@ -10,16 +10,7 @@ data_dir = "/opt/nomad"
 client {
   enabled = true
 
-  # For demo assume you are talking to server1. For production,
-  # this should be like "nomad.service.consul:4647" and a system
-  # like Consul used for service discovery.
-#  servers = ["127.0.0.1:4647"]
 }
-
-# Modify our port to avoid a collision with server1
-#ports {
-#  http = 5656
-#}
 
 # Require TLS
 tls {
@@ -32,4 +23,8 @@ tls {
 
   verify_server_hostname = true
   verify_https_client    = true
+}
+
+consul{
+  token = "{{NOMAD_CLIENT_CONSUL_TOKEN}}"
 }
