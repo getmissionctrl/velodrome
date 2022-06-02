@@ -127,6 +127,13 @@ func TestMakeSecrets(t *testing.T) {
 	for _, path := range files {
 		assertFileExists(t, filepath.Join(nomadDir, path))
 	}
+
+	secrets, err := getSecrets()
+	assert.NoError(t, err)
+	assert.Equal(t, "TBD", secrets.ConsulBootstrapToken)
+	assert.Equal(t, "TBD", secrets.ConsulAgentToken)
+	assert.Equal(t, "TBD", secrets.NomadClientConsulToken)
+	assert.Equal(t, "TBD", secrets.NomadServerConsulToken)
 }
 
 func assertFileExists(t *testing.T, path string) {

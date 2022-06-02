@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,6 +14,7 @@ import (
 	"text/template"
 
 	"github.com/relex/aini"
+	"gopkg.in/yaml.v3"
 )
 
 //go:embed templates/consul/consul-policies.hcl
@@ -51,15 +53,13 @@ var setupAnsible string
 //go:embed templates/ansible/destroy.yml
 var destroyAnsible string
 
-//go:embed templates/secrets.yml
-var secretsYml string
-
 type secretsConfig struct {
-	ConsulGossipKey        string
-	NomadGossipKey         string
-	NomadClientConsulToken string
-	NomadServerConsulToken string
-	ConsulAgentToken       string
+	ConsulGossipKey        string `yaml:"CONSUL_GOSSIP_KEY"`
+	NomadGossipKey         string `yaml:"NOMAD_GOSSIP_KEY"`
+	NomadClientConsulToken string `yaml:"NOMAD_CLIENT_CONSUL_TOKEN"`
+	NomadServerConsulToken string `yaml:"NOMAD_SERVER_CONSUL_TOKEN"`
+	ConsulAgentToken       string `yaml:"CONSUL_AGENT_TOKEN"`
+	ConsulBootstrapToken   string `yaml:"CONSUL_BOOTSTRAP_TOKEN"`
 }
 
 //calculate bootstrap expect from files
@@ -93,11 +93,7 @@ func Configure(inventoryFile, dcName string) error {
 		return err
 	}
 	err = Secrets(inv, dcName)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func readInventory(inventoryFile string) (*aini.InventoryData, error) {
@@ -116,6 +112,109 @@ func readInventory(inventoryFile string) (*aini.InventoryData, error) {
 	}
 
 	return aini.Parse(f)
+}
+
+func BootstrapConsul(inventory string) (bool, error) {
+	secrets, err := getSecrets()
+	if err != nil {
+		return false, err
+	}
+	inv, err := readInventory(inventory)
+	if err != nil {
+		return false, err
+	}
+	if secrets.ConsulBootstrapToken != "TBD" {
+		return false, nil
+	}
+	hosts := getHosts(inv, "consul_servers")
+	if len(hosts) == 0 {
+		return false, fmt.Errorf("no consul servers found in inventory")
+	}
+	host := hosts[0]
+	secretsDir := filepath.Join("config", "secrets")
+
+	path := filepath.Join(secretsDir, "consul-bootstrap.token")
+	err = runCmd("", fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8500" && consul acl bootstrap > %s`, host, path), os.Stdout)
+	if err != nil {
+		return false, err
+	}
+	token, err := parseConsulToken(path)
+	if err != nil {
+		return false, err
+	}
+	secrets.ConsulBootstrapToken = token
+	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8500" && export CONSUL_HTTP_TOKEN="%s" && `, host, token)
+	policyConsul := filepath.Join("config", "consul", "consul-policies.hcl")
+	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name consul-policies -rules @%s`, exports, policyConsul), os.Stdout)
+	if err != nil {
+		return false, err
+	}
+	policyConsul = filepath.Join("config", "consul", "nomad-client-policy.hcl")
+	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name nomad-client -rules @%s`, exports, policyConsul), os.Stdout)
+	if err != nil {
+		return false, err
+	}
+	policyConsul = filepath.Join("config", "consul", "nomad-server-policy.hcl")
+	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name nomad-server -rules @%s`, exports, policyConsul), os.Stdout)
+	if err != nil {
+		return false, err
+	}
+	tokenPath := filepath.Join(secretsDir, "consul-client.token")
+	err = runCmd("", fmt.Sprintf(`%sconsul acl token create -description "agent token"  -policy-name consul-policies > %s`, exports, tokenPath), os.Stdout)
+	if err != nil {
+		return false, err
+	}
+	clientToken, err := parseConsulToken(tokenPath)
+	if err != nil {
+		return false, err
+	}
+
+	secrets.ConsulAgentToken = clientToken
+
+	tokenPath = filepath.Join(secretsDir, "nomad-client.token")
+	err = runCmd("", fmt.Sprintf(`%sconsul acl token create -description "nomad client token"  -policy-name nomad-client > %s`, exports, tokenPath), os.Stdout)
+	if err != nil {
+		return false, err
+	}
+	clientToken, err = parseConsulToken(tokenPath)
+	if err != nil {
+		return false, err
+	}
+
+	secrets.NomadClientConsulToken = clientToken
+
+	tokenPath = filepath.Join(secretsDir, "nomad-server.token")
+	err = runCmd("", fmt.Sprintf(`%sconsul acl token create -description "nomad server token"  -policy-name nomad-server > %s`, exports, tokenPath), os.Stdout)
+	if err != nil {
+		return false, err
+	}
+	clientToken, err = parseConsulToken(tokenPath)
+	if err != nil {
+		return false, err
+	}
+
+	secrets.NomadServerConsulToken = clientToken
+	d, err := yaml.Marshal(&secrets)
+	if err != nil {
+		return false, err
+	}
+	err = os.WriteFile(filepath.Join("config", "secrets", "secrets.yml"), d, 0755)
+
+	return true, err
+}
+
+func getSecrets() (*secretsConfig, error) {
+	bytes, err := ioutil.ReadFile(filepath.Join("config", "secrets", "secrets.yml"))
+	if err != nil {
+		return nil, err
+	}
+	var secrets secretsConfig
+	err = yaml.Unmarshal(bytes, &secrets)
+	if err != nil {
+		return nil, err
+	}
+	return &secrets, nil
+
 }
 
 func makeConsulPolicies(inv *aini.InventoryData) error {
@@ -260,29 +359,21 @@ func Secrets(inv *aini.InventoryData, dcName string) error {
 	}
 	nomadGossipKey := strings.ReplaceAll(string(out2.Bytes()), "\n", "")
 
-	var buf bytes.Buffer
-	tmpl, e := template.New("secrets-yaml").Parse(secretsYml)
-	if e != nil {
-		return e
-	}
-	err = tmpl.Execute(&buf, &secretsConfig{
+	secrets := &secretsConfig{
 		ConsulGossipKey:        consulGossipKey,
 		NomadGossipKey:         nomadGossipKey,
 		NomadClientConsulToken: "TBD",
 		NomadServerConsulToken: "TBD",
 		ConsulAgentToken:       "TBD",
-	})
-	if err != nil {
-		return err
+		ConsulBootstrapToken:   "TBD",
 	}
 
-	output := buf.Bytes()
-
 	if _, err := os.Stat(filepath.Join("config", "secrets", "secrets.yml")); errors.Is(err, os.ErrNotExist) {
-		fmt.Println("write file")
-
-		fmt.Println(string(output))
-		err = os.WriteFile(filepath.Join("config", "secrets", "secrets.yml"), output, 0755)
+		d, err := yaml.Marshal(&secrets)
+		if err != nil {
+			return err
+		}
+		err = os.WriteFile(filepath.Join("config", "secrets", "secrets.yml"), d, 0755)
 		if err != nil {
 			return err
 		}
