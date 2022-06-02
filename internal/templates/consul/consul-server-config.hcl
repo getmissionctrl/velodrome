@@ -7,7 +7,7 @@ verify_server_hostname = true
 
 client_addr = "0.0.0.0"
 server = true
-bootstrap_expect = 3
+bootstrap_expect = EXPECTS_NO
 
 bind_addr = "{{ private_ip }}"
 

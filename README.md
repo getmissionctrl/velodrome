@@ -85,12 +85,13 @@ Run ansible:
     - [x] Add configs to cluster
     - [x] Systemctl script & startup
     - [x] Verify cluster setup
-    - [ ] Automate consul ACL bootstrap
+    - [x] Automate consul ACL bootstrap
 - [x] Nomad setup
     - [x] Setup cluster secrets
     - [x] Template configs
     - [x] Add configs to cluster
     - [x] Systemctl scripts and startup
+- [x] Nomad & consul bootstrap expects based on inventory 
 - [ ] Observability
     - [ ] Server health
         - [ ] CPU monitor

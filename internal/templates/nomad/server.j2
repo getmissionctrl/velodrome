@@ -7,7 +7,7 @@ server {
   encrypt = "{{ NOMAD_GOSSIP_KEY }}"
 
   # Self-elect, should be 3 or 5 for production
-  bootstrap_expect = 3
+  bootstrap_expect = EXPECTS_NO
 }
 #bind_addr = "0.0.0.0" #was private_ip, but for Contabo, it was same as public
 

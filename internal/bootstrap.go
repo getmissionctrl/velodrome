@@ -114,95 +114,6 @@ func readInventory(inventoryFile string) (*aini.InventoryData, error) {
 	return aini.Parse(f)
 }
 
-func BootstrapConsul(inventory string) (bool, error) {
-	secrets, err := getSecrets()
-	if err != nil {
-		return false, err
-	}
-	inv, err := readInventory(inventory)
-	if err != nil {
-		return false, err
-	}
-	if secrets.ConsulBootstrapToken != "TBD" {
-		return false, nil
-	}
-	hosts := getHosts(inv, "consul_servers")
-	if len(hosts) == 0 {
-		return false, fmt.Errorf("no consul servers found in inventory")
-	}
-	host := hosts[0]
-	secretsDir := filepath.Join("config", "secrets")
-
-	path := filepath.Join(secretsDir, "consul-bootstrap.token")
-	err = runCmd("", fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8500" && consul acl bootstrap > %s`, host, path), os.Stdout)
-	if err != nil {
-		return false, err
-	}
-	token, err := parseConsulToken(path)
-	if err != nil {
-		return false, err
-	}
-	secrets.ConsulBootstrapToken = token
-	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8500" && export CONSUL_HTTP_TOKEN="%s" && `, host, token)
-	policyConsul := filepath.Join("config", "consul", "consul-policies.hcl")
-	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name consul-policies -rules @%s`, exports, policyConsul), os.Stdout)
-	if err != nil {
-		return false, err
-	}
-	policyConsul = filepath.Join("config", "consul", "nomad-client-policy.hcl")
-	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name nomad-client -rules @%s`, exports, policyConsul), os.Stdout)
-	if err != nil {
-		return false, err
-	}
-	policyConsul = filepath.Join("config", "consul", "nomad-server-policy.hcl")
-	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name nomad-server -rules @%s`, exports, policyConsul), os.Stdout)
-	if err != nil {
-		return false, err
-	}
-	tokenPath := filepath.Join(secretsDir, "consul-client.token")
-	err = runCmd("", fmt.Sprintf(`%sconsul acl token create -description "agent token"  -policy-name consul-policies > %s`, exports, tokenPath), os.Stdout)
-	if err != nil {
-		return false, err
-	}
-	clientToken, err := parseConsulToken(tokenPath)
-	if err != nil {
-		return false, err
-	}
-
-	secrets.ConsulAgentToken = clientToken
-
-	tokenPath = filepath.Join(secretsDir, "nomad-client.token")
-	err = runCmd("", fmt.Sprintf(`%sconsul acl token create -description "nomad client token"  -policy-name nomad-client > %s`, exports, tokenPath), os.Stdout)
-	if err != nil {
-		return false, err
-	}
-	clientToken, err = parseConsulToken(tokenPath)
-	if err != nil {
-		return false, err
-	}
-
-	secrets.NomadClientConsulToken = clientToken
-
-	tokenPath = filepath.Join(secretsDir, "nomad-server.token")
-	err = runCmd("", fmt.Sprintf(`%sconsul acl token create -description "nomad server token"  -policy-name nomad-server > %s`, exports, tokenPath), os.Stdout)
-	if err != nil {
-		return false, err
-	}
-	clientToken, err = parseConsulToken(tokenPath)
-	if err != nil {
-		return false, err
-	}
-
-	secrets.NomadServerConsulToken = clientToken
-	d, err := yaml.Marshal(&secrets)
-	if err != nil {
-		return false, err
-	}
-	err = os.WriteFile(filepath.Join("config", "secrets", "secrets.yml"), d, 0755)
-
-	return true, err
-}
-
 func getSecrets() (*secretsConfig, error) {
 	bytes, err := ioutil.ReadFile(filepath.Join("config", "secrets", "secrets.yml"))
 	if err != nil {
@@ -317,6 +228,7 @@ func makeConfigs(inv *aini.InventoryData, dcName string) error {
 
 	serverWithDC := strings.ReplaceAll(consulServer, "dc1", dcName)
 	serverWithDC = strings.ReplaceAll(serverWithDC, "join_servers", hosts)
+	serverWithDC = strings.ReplaceAll(serverWithDC, "EXPECTS_NO", fmt.Sprintf("%v", len(getHosts(inv, "consul_servers"))))
 	err = os.WriteFile(filepath.Join("config", "consul", "server.j2"), []byte(serverWithDC), 0755)
 	if err != nil {
 		return err
@@ -327,6 +239,8 @@ func makeConfigs(inv *aini.InventoryData, dcName string) error {
 	}
 	nomadServerService := strings.ReplaceAll(nomadService, "nomad_user", "nomad")
 	nomadClientService := strings.ReplaceAll(nomadService, "nomad_user", "root")
+
+	nomadServer = strings.ReplaceAll(nomadServer, "EXPECTS_NO", fmt.Sprintf("%v", len(getHosts(inv, "nomad_servers"))))
 
 	err = os.WriteFile(filepath.Join("config", "nomad", "server.j2"), []byte(nomadServer), 0755)
 	if err != nil {
