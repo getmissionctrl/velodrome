@@ -276,6 +276,19 @@ func getHosts(inv *aini.InventoryData, group string) []string {
 	return hosts
 }
 
+func getPrivateHosts(inv *aini.InventoryData, group string) []string {
+	hosts := []string{}
+	for k, v := range inv.Groups {
+		if k == group {
+			for _, h := range v.Hosts {
+				hosts = append(hosts, h.Vars["private_ip"])
+			}
+			return hosts
+		}
+	}
+	return hosts
+}
+
 func makeConfigs(inv *aini.InventoryData, dcName string) error {
 	hostMap := make(map[string]string)
 	hosts := ""
@@ -404,7 +417,9 @@ func Secrets(inv *aini.InventoryData, dcName string) error {
 			return err
 		}
 		hosts := getHosts(inv, "nomad_servers")
-		hostString := strings.Join(hosts, ",")
+		privateHosts := getPrivateHosts(inv, "nomad_servers")
+		hostString := fmt.Sprintf("server.global.nomad,%s,%s", strings.Join(hosts, ","), strings.Join(privateHosts, ","))
+		fmt.Println("generating cert for hosts: " + hostString)
 
 		err = os.WriteFile(filepath.Join(nomadSecretDir, "cfssl.json"), []byte(cfssl), 0755)
 		if err != nil {
