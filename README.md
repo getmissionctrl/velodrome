@@ -7,6 +7,7 @@ You need:
 * `nomad`
 * `consul`
 * `ansible`
+* `cfssl` & `cfssljson`
 
 
 `git secret`-usage:
