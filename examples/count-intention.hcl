@@ -6,5 +6,3 @@ Sources = [
     Action = "allow"
   }
 ]
-
-// consul config write intention-config.hcl

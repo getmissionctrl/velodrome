@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/relex/aini"
 	"gopkg.in/yaml.v3"
 )
 
@@ -28,6 +29,27 @@ func parseConsulToken(file string) (string, error) {
 	return "", nil
 }
 
+func regenerateConsulPolicies(inventory *aini.InventoryData, secrets *secretsConfig) error {
+	token := secrets.ConsulBootstrapToken
+	hosts := getHosts(inventory, "consul_servers")
+	if len(hosts) == 0 {
+		return fmt.Errorf("no consul servers found in inventory")
+	}
+	host := hosts[0]
+
+	err := makeConsulPolicies(inventory)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Updating consul policies")
+
+	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8500" && export CONSUL_HTTP_TOKEN="%s" && `, host, token)
+	policyConsul := filepath.Join("config", "consul", "consul-policies.hcl")
+	err = runCmd("", fmt.Sprintf(`%sconsul acl policy update -name consul-policies -rules @%s`, exports, policyConsul), os.Stdout)
+
+	return err
+}
+
 func BootstrapConsul(inventory string) (bool, error) {
 	secrets, err := getSecrets()
 	if err != nil {
@@ -38,7 +60,8 @@ func BootstrapConsul(inventory string) (bool, error) {
 		return false, err
 	}
 	if secrets.ConsulBootstrapToken != "TBD" {
-		return false, nil
+		err = regenerateConsulPolicies(inv, secrets)
+		return false, err
 	}
 	hosts := getHosts(inv, "consul_servers")
 	if len(hosts) == 0 {

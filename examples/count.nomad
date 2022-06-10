@@ -1,5 +1,5 @@
 job "countdash" {
-  datacenters = ["dc1"]
+  datacenters = ["hetzner"]
 
   group "api" {
     network {

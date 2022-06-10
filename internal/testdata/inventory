@@ -8,4 +8,4 @@
 159.69.9.47 private_ip=10.0.0.3
 [clients]
 167.235.23.223 private_ip=10.0.0.5 host_name=ubuntu-4gb-nbg1-7
-167.235.73.180 private_ip=10.0.0.4 host_name=ubuntu-4gb-nbg1-5
+167.235.73.180 private_ip=10.0.0.4 host_name=ubuntu-4gb-nbg1-10
