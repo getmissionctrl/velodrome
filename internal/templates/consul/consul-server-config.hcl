@@ -36,3 +36,8 @@ acl = {
   default_policy = "deny"
   enable_token_persistence = true
 }
+
+ports {
+  http = -1
+  https = 8501
+}

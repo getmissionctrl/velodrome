@@ -76,7 +76,14 @@
         dest: /etc/consul.d/certs/consul-agent-ca.pem
         owner: consul
         group: consul
-        mode: 0644
+        mode: 0755
+    - name: copy consul client key
+      copy:
+        src: secrets/consul/consul-agent-ca-key.pem
+        dest: /etc/consul.d/certs/consul-agent-ca-key.pem
+        owner: consul
+        group: consul
+        mode: 0755
     - name: copy consul service file
       copy:
         src: consul/consul.service

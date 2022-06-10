@@ -42,8 +42,7 @@ func regenerateConsulPolicies(inventory *aini.InventoryData, secrets *secretsCon
 		return err
 	}
 	fmt.Println("Updating consul policies")
-
-	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8500" && export CONSUL_HTTP_TOKEN="%s" && `, host, token)
+	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8501" && export CONSUL_HTTP_TOKEN="%s" && export CONSUL_CLIENT_CERT=config/secrets/consul/consul-agent-ca.pem && export CONSUL_CLIENT_KEY=config/secrets/consul/consul-agent-ca-key.pem && export CONSUL_HTTP_SSL=true && export CONSUL_HTTP_SSL_VERIFY=false && `, host, token)
 	policyConsul := filepath.Join("config", "consul", "consul-policies.hcl")
 	err = runCmd("", fmt.Sprintf(`%sconsul acl policy update -name consul-policies -rules @%s`, exports, policyConsul), os.Stdout)
 
@@ -71,7 +70,9 @@ func BootstrapConsul(inventory string) (bool, error) {
 	secretsDir := filepath.Join("config", "secrets")
 
 	path := filepath.Join(secretsDir, "consul-bootstrap.token")
-	err = runCmd("", fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8500" && consul acl bootstrap > %s`, host, path), os.Stdout)
+	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8501" && export CONSUL_CLIENT_CERT=config/secrets/consul/consul-agent-ca.pem && export CONSUL_CLIENT_KEY=config/secrets/consul/consul-agent-ca-key.pem && export CONSUL_HTTP_SSL=true && export CONSUL_HTTP_SSL_VERIFY=false && `, host)
+
+	err = runCmd("", fmt.Sprintf(`%s consul acl bootstrap > %s`, exports, path), os.Stdout)
 	if err != nil {
 		return false, err
 	}
@@ -80,7 +81,7 @@ func BootstrapConsul(inventory string) (bool, error) {
 		return false, err
 	}
 	secrets.ConsulBootstrapToken = token
-	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8500" && export CONSUL_HTTP_TOKEN="%s" && `, host, token)
+	exports = fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8501" && export CONSUL_HTTP_TOKEN="%s" && export CONSUL_CLIENT_CERT=config/secrets/consul/consul-agent-ca.pem && export CONSUL_CLIENT_KEY=config/secrets/consul/consul-agent-ca-key.pem && export CONSUL_HTTP_SSL=true && export CONSUL_HTTP_SSL_VERIFY=false && `, host, token)
 	policyConsul := filepath.Join("config", "consul", "consul-policies.hcl")
 	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name consul-policies -rules @%s`, exports, policyConsul), os.Stdout)
 	if err != nil {
