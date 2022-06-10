@@ -2,18 +2,10 @@
 167.235.55.204 private_ip=10.0.0.6 host_name=ubuntu-4gb-nbg1-1
 23.88.98.125 private_ip=10.0.0.2 host_name=ubuntu-4gb-nbg1-2
 159.69.9.47 private_ip=10.0.0.3 host_name=ubuntu-4gb-nbg1-3
-[consul_servers:vars]
-servers='"10.0.0.6", "10.0.0.2", "10.0.0.3"'
 [nomad_servers]
 167.235.55.204 private_ip=10.0.0.6
 23.88.98.125 private_ip=10.0.0.2
 159.69.9.47 private_ip=10.0.0.3
-[nomad_servers:vars]
-nomad_user=nomad
 [clients]
-167.235.23.223 private_ip=10.0.0.5 agent_token=92756e87-4fb6-a6e7-0097-10501640214f host_name=ubuntu-4gb-nbg1-7
-167.235.73.180 private_ip=10.0.0.4 agent_token=52748b72-12f1-8b1b-3d6b-184dd4a70547 host_name=ubuntu-4gb-nbg1-5
-[clients:vars]
-servers='"10.0.0.6", "10.0.0.2", "10.0.0.3"'
-nomad_user=root
-
+167.235.23.223 private_ip=10.0.0.5 host_name=ubuntu-4gb-nbg1-7
+167.235.73.180 private_ip=10.0.0.4 host_name=ubuntu-4gb-nbg1-10

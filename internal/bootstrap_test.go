@@ -28,7 +28,7 @@ func TestMakeConsulPoliciesAndHashiConfigs(t *testing.T) {
 
 	contents := string(bytes)
 
-	assert.Contains(t, contents, `node "ubuntu-4gb-nbg1-1"`)
+	assert.Contains(t, contents, `node "ubuntu1"`)
 
 	assert.Equal(t, 5, strings.Count(contents, "node"))
 
