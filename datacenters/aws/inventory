@@ -1,21 +1,11 @@
-
 [consul_servers]
-54.144.47.173 private_ip=172.31.18.155
-23.22.160.244 private_ip=172.31.16.145
-54.160.206.160 private_ip=172.31.22.40
-[consul_servers:vars]
-servers='"172.31.18.155", "172.31.16.145", "172.31.22.40"'
-
+100.26.187.35 private_ip=172.31.92.46 host_name=ip-172-31-92-46
+44.201.172.93 private_ip=172.31.83.74 host_name=ip-172-31-83-74
+3.95.137.10 private_ip=172.31.94.157 host_name=ip-172-31-94-157
 [nomad_servers]
-54.144.47.173
-23.22.160.244
-54.160.206.160
-[nomad_servers:vars]
-nomad_user=nomad
-
+100.26.187.35 private_ip=172.31.92.46 host_name=ip-172-31-92-46
+44.201.172.93 private_ip=172.31.83.74 host_name=ip-172-31-83-74
+3.95.137.10 private_ip=172.31.94.157 host_name=ip-172-31-94-157
 [clients]
-3.90.208.213 private_ip=172.31.19.90
-34.228.157.155 private_ip=172.31.16.75
-[clients:vars]
-servers='"172.31.18.155", "172.31.16.145", "172.31.22.40"'
-nomad_user=root
+3.93.10.253 private_ip=172.31.93.241 host_name=ip-172-31-93-241
+44.204.161.98 private_ip=172.31.92.211 host_name=ip-172-31-92-211
