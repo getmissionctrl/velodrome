@@ -86,6 +86,7 @@ Run ansible:
     - [x] Systemctl script & startup
     - [x] Verify cluster setup
     - [x] Automate consul ACL bootstrap
+    - [x] Allow anonymous DNS access and default Consul as DNS for `.consul` domains
 - [x] Nomad setup
     - [x] Setup cluster secrets
     - [x] Template configs
