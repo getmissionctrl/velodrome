@@ -35,12 +35,13 @@ func bootstrap() *cobra.Command {
 	var inventoryFile string
 	var user string
 	var dcName string
+	var useHttp bool
 	cmd := &cobra.Command{
 		Use:   "up",
 		Short: "bootstraps and starts a cluster",
 		Long:  `bootstraps and starts a cluster`,
 		Run: func(cmd *cobra.Command, args []string) {
-			err := internal.Bootstrap(inventoryFile, dcName, user)
+			err := internal.Bootstrap(inventoryFile, dcName, user, useHttp)
 			if err != nil {
 
 				fmt.Println(err)
@@ -51,6 +52,8 @@ func bootstrap() *cobra.Command {
 
 	addFlags(cmd, &inventoryFile, &user)
 	cmd.Flags().StringVarP(&dcName, "datacentre", "d", "", "name of data center")
+
+	cmd.Flags().BoolVarP(&useHttp, "insecure", "s", false, "allows http access")
 
 	err := cmd.MarkFlagRequired("datacentre")
 	if err != nil {

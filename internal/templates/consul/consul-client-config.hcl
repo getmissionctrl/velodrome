@@ -10,6 +10,7 @@ server = false
 bind_addr = "{{ private_ip }}"
 
 ca_file = "/etc/consul.d/certs/consul-agent-ca.pem"
+key_file = "/etc/consul.d/certs/consul-agent-ca-key.pem"
 
 auto_encrypt {
   tls = true
@@ -17,6 +18,8 @@ auto_encrypt {
 
 ports {
   grpc = 8502
+  http = -1
+  https = 8501
 }
 
 connect {

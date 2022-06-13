@@ -17,6 +17,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+//go:embed templates/consul/resolved.conf
+var resolvedConf string
+
+//go:embed templates/consul/anonymous-policy.hcl
+var anonymousDns string
+
 //go:embed templates/consul/consul-policies.hcl
 var consulPolicies string
 
@@ -63,7 +69,7 @@ type secretsConfig struct {
 }
 
 //calculate bootstrap expect from files
-func Configure(inventoryFile, dcName string) error {
+func Configure(inventoryFile, dcName string, useHttp bool) error {
 
 	err := os.MkdirAll(filepath.Join("config"), 0755)
 	if err != nil {
@@ -88,7 +94,7 @@ func Configure(inventoryFile, dcName string) error {
 	if err != nil {
 		return err
 	}
-	err = makeConfigs(inv, dcName)
+	err = makeConfigs(inv, dcName, useHttp)
 	if err != nil {
 		return err
 	}
@@ -171,6 +177,11 @@ func makeConsulPolicies(inv *aini.InventoryData) error {
 		return err
 	}
 
+	err = os.WriteFile(filepath.Join("config", "consul", "anonymous-policy.hcl"), []byte(anonymousDns), 0755)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -200,7 +211,7 @@ func getPrivateHosts(inv *aini.InventoryData, group string) []string {
 	return hosts
 }
 
-func makeConfigs(inv *aini.InventoryData, dcName string) error {
+func makeConfigs(inv *aini.InventoryData, dcName string, useHttp bool) error {
 	hostMap := make(map[string]string)
 	hosts := ""
 	first := true
@@ -229,7 +240,15 @@ func makeConfigs(inv *aini.InventoryData, dcName string) error {
 	serverWithDC := strings.ReplaceAll(consulServer, "dc1", dcName)
 	serverWithDC = strings.ReplaceAll(serverWithDC, "join_servers", hosts)
 	serverWithDC = strings.ReplaceAll(serverWithDC, "EXPECTS_NO", fmt.Sprintf("%v", len(getHosts(inv, "consul_servers"))))
+	if useHttp {
+		serverWithDC = strings.ReplaceAll(serverWithDC, "-1", "8500")
+	}
 	err = os.WriteFile(filepath.Join("config", "consul", "server.j2"), []byte(serverWithDC), 0755)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(filepath.Join("config", "consul", "resolved.conf"), []byte(resolvedConf), 0755)
 	if err != nil {
 		return err
 	}

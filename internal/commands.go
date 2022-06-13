@@ -19,8 +19,8 @@ func Destroy(inventory, user string) error {
 	return err
 }
 
-func Bootstrap(inventory, dcName, user string) error {
-	err := Configure(inventory, dcName)
+func Bootstrap(inventory, dcName, user string, useHttp bool) error {
+	err := Configure(inventory, dcName, useHttp)
 	if err != nil {
 		return err
 	}

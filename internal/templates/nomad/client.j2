@@ -29,4 +29,9 @@ tls {
 
 consul{
   token = "{{NOMAD_CLIENT_CONSUL_TOKEN}}"
+  address =  "127.0.0.1:8501"
+  cert_file = "/etc/consul.d/certs/consul-agent-ca.pem"
+  key_file = "/etc/consul.d/certs/consul-agent-ca-key.pem"
+  ssl = true
+  verify_ssl = false
 }

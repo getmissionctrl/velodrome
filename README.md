@@ -2,8 +2,7 @@
 Sets up Consul & Nomad Servers & Clients given an inventory.
 
 ## Instructions for repo
-You need:
-* `git secret`
+Your machine/operator node will need the following pre-installed:
 * `nomad`
 * `consul`
 * `ansible`
@@ -112,3 +111,16 @@ Run ansible:
     - [ ] Systemctl script & startup
     - [ ] Auto-unlock with script/ansible/terraform
     - [ ] Integrate with Nomad
+
+
+# Kill orphaned nomad mounts
+
+```
+export NOMAD_DATA_ROOT=«Path to your Nomad data_dir»
+
+for ALLOC in `ls -d $NOMAD_DATA_ROOT/alloc/*`; do for JOB in `ls ${ALLOC}| grep -v alloc`; do umount ${ALLOC}/${JOB}/secrets; umount ${ALLOC}/${JOB}/dev; umount ${ALLOC}/${JOB}/proc; umount ${ALLOC}/${JOB}/alloc; done; done
+```
+# Cert for client access with browser.
+```
+openssl pkcs12 -inkey consul-agent-ca-key.pem -in consul-agent-ca.pem -export -out consul.pfx
+```
