@@ -97,6 +97,18 @@ func BootstrapConsul(inventory string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	policyConsul = filepath.Join("config", "consul", "anonymous-policy.hcl")
+	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name anonymous-dns-read -rules @%s`, exports, policyConsul), os.Stdout)
+	if err != nil {
+		return false, err
+	}
+
+	err = runCmd("", fmt.Sprintf(`%sconsul acl token update -id anonymous -policy-name=anonymous-dns-read`, exports), os.Stdout)
+	if err != nil {
+		return false, err
+	}
+
 	tokenPath := filepath.Join(secretsDir, "consul-client.token")
 	err = runCmd("", fmt.Sprintf(`%sconsul acl token create -description "agent token"  -policy-name consul-policies > %s`, exports, tokenPath), os.Stdout)
 	if err != nil {

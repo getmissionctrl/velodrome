@@ -84,6 +84,11 @@
         owner: consul
         group: consul
         mode: 0755
+    - name: copy consul client key
+      copy:
+        src: consul/resolved.conf
+        dest: /etc/systemd/resolved.conf
+        mode: 0755
     - name: copy consul service file
       copy:
         src: consul/consul.service
@@ -277,3 +282,8 @@
         state: restarted
         daemon_reload: yes
         name: nomad
+    - name: Restart resolved service
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: yes
+        name:  systemd-resolved
