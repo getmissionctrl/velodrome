@@ -40,7 +40,7 @@ func TestMakeConsulPoliciesAndHashiConfigs(t *testing.T) {
 
 	inv, err = readInventory(filepath.Join("testdata", "inventory"))
 	assert.NoError(t, err)
-	makeConfigs(inv, "hetzner", false)
+	makeConfigs(inv, "hetzner")
 
 	serverBytes, err := ioutil.ReadFile(filepath.Join("config", "consul", "server.j2"))
 	assert.NoError(t, err)
@@ -58,6 +58,9 @@ func TestMakeConsulPoliciesAndHashiConfigs(t *testing.T) {
 
 	assert.Contains(t, clientConf, `datacenter = "hetzner"`)
 	assert.Contains(t, serverConf, `datacenter = "hetzner"`)
+	assert.Contains(t, clientConf, `http = 8500`)
+	assert.Contains(t, serverConf, `http = 8500`)
+
 	retryJoin := `"10.0.0.3"`
 	assert.Contains(t, clientConf, retryJoin)
 	assert.Contains(t, serverConf, retryJoin)

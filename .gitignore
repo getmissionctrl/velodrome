@@ -40,3 +40,6 @@ secrets/**/*.csr
 
 pkg/config
 config
+
+grafana-cloud
+grafana-agent.sh 

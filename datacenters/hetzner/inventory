@@ -9,3 +9,9 @@
 [clients]
 167.235.23.223 private_ip=10.0.0.5 host_name=ubuntu-4gb-nbg1-7
 167.235.73.180 private_ip=10.0.0.4 host_name=ubuntu-4gb-nbg1-10
+[prometheus]
+167.235.23.223
+[grafana]
+167.235.23.223
+[loki]
+167.235.23.223 private_ip=10.0.0.5

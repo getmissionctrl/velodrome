@@ -38,6 +38,11 @@ acl = {
 }
 
 ports {
-  http = -1
+  http = 8500
   https = 8501
+}
+
+telemetry {
+  disable_hostname = true
+  prometheus_retention_time = "12h"
 }

@@ -11,7 +11,10 @@ datacenter = "dc1"
 # Enable the client
 client {
   enabled = true
-
+  host_volume "docker-sock-ro" {
+    path = "/var/run/docker.sock"
+    read_only = true
+  }
 }
 
 # Require TLS
@@ -34,4 +37,19 @@ consul{
   key_file = "/etc/consul.d/certs/consul-agent-ca-key.pem"
   ssl = true
   verify_ssl = false
+}
+
+telemetry {
+  collection_interval = "60s"
+  disable_hostname = true
+  prometheus_metrics = true
+  publish_allocation_metrics = true
+  publish_node_metrics = true
+}
+
+plugin "docker" {
+  config {
+    # extra Docker labels to be set by Nomad on each Docker container with the appropriate value
+    extra_labels = ["job_name", "task_group_name", "task_name", "namespace", "node_name"]
+  }
 }

@@ -22,7 +22,7 @@ func main() {
 		},
 	}
 
-	rootCmd.AddCommand(bootstrap(), destroy())
+	rootCmd.AddCommand(bootstrap(), destroy(), observability())
 
 	err := rootCmd.Execute()
 	if err != nil {
@@ -35,15 +35,13 @@ func bootstrap() *cobra.Command {
 	var inventoryFile string
 	var user string
 	var dcName string
-	var useHttp bool
 	cmd := &cobra.Command{
 		Use:   "up",
 		Short: "bootstraps and starts a cluster",
 		Long:  `bootstraps and starts a cluster`,
 		Run: func(cmd *cobra.Command, args []string) {
-			err := internal.Bootstrap(inventoryFile, dcName, user, useHttp)
+			err := internal.Bootstrap(inventoryFile, dcName, user)
 			if err != nil {
-
 				fmt.Println(err)
 				os.Exit(1)
 			}
@@ -53,13 +51,31 @@ func bootstrap() *cobra.Command {
 	addFlags(cmd, &inventoryFile, &user)
 	cmd.Flags().StringVarP(&dcName, "datacentre", "d", "", "name of data center")
 
-	cmd.Flags().BoolVarP(&useHttp, "insecure", "s", false, "allows http access")
-
 	err := cmd.MarkFlagRequired("datacentre")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
+	return cmd
+}
+
+func observability() *cobra.Command {
+	var inventoryFile string
+	var user string
+	cmd := &cobra.Command{
+		Use:   "observability",
+		Short: "adds observability to a cluster",
+		Long:  `adds observability a cluster`,
+		Run: func(cmd *cobra.Command, args []string) {
+			err := internal.Observability(inventoryFile, user)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		},
+	}
+	addFlags(cmd, &inventoryFile, &user)
 
 	return cmd
 }

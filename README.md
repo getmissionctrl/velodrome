@@ -94,25 +94,31 @@ Run ansible:
     - [x] Systemctl scripts and startup
 - [x] Nomad & consul bootstrap expects based on inventory 
 - [ ] Observability
-    - [ ] Server health
-        - [ ] CPU monitor
-        - [ ] RAM usage monitor
-        - [ ] HD usage monitor
-    - [ ] Log aggregation of jobs
-    - [ ] Nomad metrics
-    - [ ] Prometheus metrics
-    - [ ] Job tracing
+    - [x] Server health
+        - [x] CPU monitor
+        - [x] RAM usage monitor
+        - [x] HD usage monitor  
+    - [x] Nomad metrics
+    - [x] Consul metrics
+    - [x] Log aggregation of jobs
+    - [ ] Metrics produced by jobs
+    - [x] Job tracing
 - [ ] Networking
     - [x] Understand service mesh/ingress etc from consul
-    - [ ] Ingress to outside world with http/https
+    - [x] Ingress to outside world with http/https
+    - [x] Use consul as DNS
     - [ ] Pull private docker images
+    - [ ] Observability ingress
+    - [ ] Auto-accept server signatures on first time connect
 - [ ] Vault setup
     - [ ] setup cluster secrets
     - [ ] template configs
     - [ ] Systemctl script & startup
     - [ ] Auto-unlock with script/ansible/terraform
     - [ ] Integrate with Nomad
-
+- [ ] O11y - extras
+    - [ ] Alerts
+    - [ ] Dashboards
 
 # Kill orphaned nomad mounts
 
@@ -124,4 +130,42 @@ for ALLOC in `ls -d $NOMAD_DATA_ROOT/alloc/*`; do for JOB in `ls ${ALLOC}| grep 
 # Cert for client access with browser.
 ```
 openssl pkcs12 -inkey consul-agent-ca-key.pem -in consul-agent-ca.pem -export -out consul.pfx
+```
+# Notes
+
+### Scrape consul
+```
+    - job_name: integrations/consul
+      metrics_path: /v1/agent/metrics
+      params:
+        format:
+        - prometheus
+      static_configs:
+      - targets:
+        - {{ private_ip }}:8500
+```
+
+# O11y setup
+
+## Tempo search in Grafana
+
+Edit `/etc/grafana/grafana.ini`, add:
+
+```
+[feature_toggles]
+enable = tempoSearch tempoBackendSearch
+
+```
+
+## Link Loki to Tempo traces
+
+Add derived fields:
+
+```
+Name: trace_id
+Regex: "trace_id":"([A-Za-z0-9]+)" // this is for json format
+Query: ${__value.raw}
+Url label: Trace
+Internal link: Tempo
+
 ```

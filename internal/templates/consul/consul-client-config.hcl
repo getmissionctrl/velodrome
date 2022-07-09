@@ -18,7 +18,7 @@ auto_encrypt {
 
 ports {
   grpc = 8502
-  http = -1
+  http = 8500
   https = 8501
 }
 
@@ -32,4 +32,9 @@ acl {
   tokens {
     agent  = "{{CONSUL_AGENT_TOKEN}}"
   }
+}
+
+telemetry {
+  disable_hostname = true
+  prometheus_retention_time = "12h"
 }
