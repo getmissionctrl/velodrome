@@ -37,6 +37,33 @@ var promtailService string
 //go:embed templates/ansible/observability.yml
 var observabilityAnsible string
 
+//go:embed templates/tempo/setup-tempo.sh
+var tempoInstall string
+
+//go:embed templates/tempo/tempo.service
+var tempoService string
+
+//go:embed templates/tempo/tempo.yml
+var tempoConfig string
+
+//go:embed templates/tempo/tempo-grpc.hcl
+var tempoGrpcService string
+
+//go:embed templates/tempo/tempo.hcl
+var tempoConsulService string
+
+//go:embed templates/loki/loki-http.hcl
+var lokiHttpService string
+
+//go:embed templates/prometheus/prometheus.hcl
+var prometheusConsulService string
+
+type consulServiceConf struct {
+	template  string
+	hostGroup string
+	file      string
+}
+
 func Observability(inventory, user string) error {
 
 	err := mkObservabilityConfigs(inventory, user)
@@ -65,6 +92,11 @@ func mkObservabilityConfigs(inventory, user string) error {
 		return err
 	}
 	err = os.MkdirAll(filepath.Join("config", "grafana"), 0755)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(filepath.Join("config", "tempo"), 0755)
 	if err != nil {
 		return err
 	}
@@ -104,6 +136,21 @@ func mkObservabilityConfigs(inventory, user string) error {
 		return err
 	}
 
+	err = os.WriteFile(filepath.Join("config", "tempo", "tempo.yml"), []byte(tempoConfig), 0755)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(filepath.Join("config", "tempo", "tempo.service"), []byte(tempoService), 0755)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(filepath.Join("config", "tempo", "setup-tempo.sh"), []byte(tempoInstall), 0755)
+	if err != nil {
+		return err
+	}
+
 	inv, err := readInventory(inventory)
 	if err != nil {
 		return err
@@ -111,7 +158,6 @@ func mkObservabilityConfigs(inventory, user string) error {
 	clients := getPrivateHosts(inv, "clients")
 	consulServers := getPrivateHosts(inv, "consul_servers")
 	nomadServers := getPrivateHosts(inv, "nomad_servers")
-	lokiServers := getPrivateHosts(inv, "loki")
 
 	tmpl, e := template.New("consul-policies").Parse(prometheusYml)
 	if e != nil {
@@ -126,8 +172,6 @@ func mkObservabilityConfigs(inventory, user string) error {
 		return err
 	}
 
-	promtailConf = strings.ReplaceAll(promtailConf, "[HOST]", lokiServers[0])
-
 	err = os.WriteFile(filepath.Join("config", "loki", "promtail.yml"), []byte(promtailConf), 0755)
 	if err != nil {
 		return err
@@ -136,6 +180,49 @@ func mkObservabilityConfigs(inventory, user string) error {
 	output := buf.Bytes()
 
 	err = os.WriteFile(filepath.Join("config", "prometheus", "prometheus.yml"), []byte(output), 0755)
+
+	secrets, err := getSecrets()
+	if err != nil {
+		return err
+	}
+
+	consulServices := []consulServiceConf{
+		{
+			template:  tempoGrpcService,
+			hostGroup: "tempo",
+			file:      filepath.Join("config", "tempo", "tempo-grpc.hcl"),
+		},
+		{
+			template:  tempoConsulService,
+			hostGroup: "tempo",
+			file:      filepath.Join("config", "tempo", "tempo.hcl"),
+		},
+		{
+			template:  prometheusConsulService,
+			hostGroup: "prometheus",
+			file:      filepath.Join("config", "prometheus", "prometheus.hcl"),
+		},
+		{
+			template:  lokiHttpService,
+			hostGroup: "loki",
+			file:      filepath.Join("config", "loki", "loki.hcl"),
+		},
+	}
+
+	for _, service := range consulServices {
+		servers := getPrivateHosts(inv, service.hostGroup)
+		template := strings.ReplaceAll(service.template, "HOST", servers[0])
+		err = os.WriteFile(filepath.Clean(service.file), []byte(template), 0755)
+		if err != nil {
+			return err
+		}
+
+		err = registerConsul(inv, secrets, service.file)
+		if err != nil {
+			return err
+		}
+
+	}
 
 	return nil
 }

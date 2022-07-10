@@ -1,17 +1,20 @@
 [consul_servers]
-167.235.55.204 private_ip=10.0.0.6 host_name=ubuntu-4gb-nbg1-1
-23.88.98.125 private_ip=10.0.0.2 host_name=ubuntu-4gb-nbg1-2
-159.69.9.47 private_ip=10.0.0.3 host_name=ubuntu-4gb-nbg1-3
+159.69.9.47 private_ip=10.0.0.2 host_name=nomad-cluster-nbg-1
+167.235.23.223 private_ip=10.0.0.5 host_name=nomad-cluster-nbg-2
+167.235.59.203 private_ip=10.0.0.6 host_name=nomad-cluster-nbg-3
 [nomad_servers]
-167.235.55.204 private_ip=10.0.0.6
-23.88.98.125 private_ip=10.0.0.2
-159.69.9.47 private_ip=10.0.0.3
+159.69.9.47 private_ip=10.0.0.2 host_name=nomad-cluster-nbg-1
+167.235.23.223 private_ip=10.0.0.5 host_name=nomad-cluster-nbg-2
+167.235.59.203 private_ip=10.0.0.6 host_name=nomad-cluster-nbg-3
 [clients]
-167.235.23.223 private_ip=10.0.0.5 host_name=ubuntu-4gb-nbg1-7
-167.235.73.180 private_ip=10.0.0.4 host_name=ubuntu-4gb-nbg1-10
-[prometheus]
-167.235.23.223
+23.88.98.125 private_ip=10.0.0.3 host_name=nomad-cluster-nbg-4
+167.235.73.180 private_ip=10.0.0.4 host_name=nomad-cluster-nbg-5
+## Observability
 [grafana]
-167.235.23.223
+167.235.55.204
+[prometheus]
+167.235.55.204 private_ip=10.0.0.7 host_name=nomad-cluster-nbg-6
 [loki]
-167.235.23.223 private_ip=10.0.0.5
+167.235.55.204 private_ip=10.0.0.7 host_name=nomad-cluster-nbg-6
+[tempo]
+167.235.55.204 private_ip=10.0.0.7 host_name=nomad-cluster-nbg-6

@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	os.Setenv("ANSIBLE_HOST_KEY_CHECKING", "False")
 	rootCmd := &cobra.Command{
 		Use:   "hshstack",
 		Short: "sets up the hashistack",

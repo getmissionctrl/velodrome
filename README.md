@@ -103,6 +103,7 @@ Run ansible:
     - [x] Log aggregation of jobs
     - [ ] Metrics produced by jobs
     - [x] Job tracing
+    - [ ] Host monitoring (disk, cpu, memory)
 - [ ] Networking
     - [x] Understand service mesh/ingress etc from consul
     - [x] Ingress to outside world with http/https
@@ -116,9 +117,20 @@ Run ansible:
     - [ ] Systemctl script & startup
     - [ ] Auto-unlock with script/ansible/terraform
     - [ ] Integrate with Nomad
-- [ ] O11y - extras
-    - [ ] Alerts
+- [ ] Grafana/Dashboards
     - [ ] Dashboards
+        - [ ] Consul health
+        - [ ] Nomad health
+        - [ ] Vault health
+        - [ ] Host health
+    - [ ] SLO templates
+        - [ ] Web/api service
+        - [ ] Headless backend service
+    - [ ] Alerts
+        - [ ] Consul health
+        - [ ] Nomad health
+        - [ ] Vault health
+        - [ ] Host health
 
 # Kill orphaned nomad mounts
 

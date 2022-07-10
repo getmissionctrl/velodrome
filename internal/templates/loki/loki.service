@@ -12,7 +12,7 @@ ExecReload=/bin/kill -HUP \$MAINPID
 ExecStart=/usr/local/bin/loki-linux-amd64 \
   --config.file=/etc/loki/loki-config.yml
 
-SyslogIdentifier=prometheus
+SyslogIdentifier=loki
 Restart=always
 
 [Install]

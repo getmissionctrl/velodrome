@@ -124,6 +124,16 @@
     - name: setup CNI plugin
       ansible.builtin.command: echo 1 | sudo tee /proc/sys/net/bridge/bridge-nf-call-arptables && echo 1 | sudo tee /proc/sys/net/bridge/bridge-nf-call-ip6tables && echo 1 | sudo tee /proc/sys/net/bridge/bridge-nf-call-iptables
 
+- hosts: clients:grafana:prometheus:loki:tempo
+  become: yes
+  tasks:
+    - name: copy agent config
+      template:
+        src: consul/client.j2
+        dest: /etc/consul.d/consul.hcl
+        owner: consul
+        group: consul
+        mode: 0644
 - hosts: clients
   become: yes
   tasks:
@@ -288,10 +298,6 @@
       ansible.builtin.systemd:
         enabled: yes
         name: consul-exporter
-    - name: start nomad service on boot
-      ansible.builtin.systemd:
-        enabled: yes
-        name: nomad
     - name: Restart consul service
       ansible.builtin.systemd:
         state: restarted
@@ -302,13 +308,22 @@
         state: restarted
         daemon_reload: yes
         name: consul-exporter
-    - name: Restart nomad service
-      ansible.builtin.systemd:
-        state: restarted
-        daemon_reload: yes
-        name: nomad
     - name: Restart resolved service
       ansible.builtin.systemd:
         state: restarted
         daemon_reload: yes
         name:  systemd-resolved
+   ### nomad clients and servers   
+- hosts: nomad_servers:clients 
+  become: yes
+  serial: 1  
+  tasks:
+    - name: start nomad service on boot
+      ansible.builtin.systemd:
+        enabled: yes
+        name: nomad
+    - name: Restart nomad service
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: yes
+        name: nomad

@@ -1,10 +1,7 @@
-
 job "demo" {
 
   datacenters = ["hetzner"]
-
   type = "service"
-
 
   update {
     max_parallel = 1
@@ -17,11 +14,8 @@ job "demo" {
 
   migrate {
     max_parallel = 1
-
     health_check = "checks"
-
     min_healthy_time = "10s"
-
     healthy_deadline = "5m"
   }
   group "app" {
@@ -69,13 +63,11 @@ job "demo" {
       mode = "fail"
     }
 
-
     task "demo-app" {
       driver = "docker"
 
       config {
-        image = "wfaler/demo-app:v9"
-
+        image = "wfaler/demo-app:v10"
         ports = ["http", "prometheus"]
       }
 

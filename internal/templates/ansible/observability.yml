@@ -1,6 +1,20 @@
-- hosts: all 
+- hosts: prometheus 
   become: yes
   tasks:
+    - name: Creates config dir
+      file:
+        path: /etc/nomad.d
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+    - name: Creates certs dir
+      file:
+        path: /etc/nomad.d/certs
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
     - name: copy client.pem
       copy:
         src: secrets/nomad/client.pem
@@ -190,3 +204,45 @@
         state: restarted
         daemon_reload: yes
         name:  promtail
+- hosts: tempo
+  become: yes
+  tasks:
+    - name: add group tempo
+      group: name='tempo'
+    - name: add tempo user
+      user: name='tempo' groups="tempo"  
+    - name: copy tempo script
+      copy:
+        src: tempo/setup-tempo.sh
+        dest: /root/setup-tempo.sh
+        mode: 0755
+    - name: install tempo agent
+      ansible.builtin.command: ./setup-tempo.sh
+    - name: Creates prom dir
+      file:
+        path: /etc/tempo
+        state: directory
+        owner: tempo
+        group: tempo
+        mode: 0755
+    - name: copy tempo.yml
+      template:
+        src: tempo/tempo.yml
+        owner: tempo
+        group: tempo
+        dest: /etc/tempo/tempo.yml
+        mode: 0755
+    - name: copy service
+      copy:
+        src: tempo/tempo.service
+        dest: /etc/systemd/system/tempo.service
+        mode: 0755
+    - name: start tempo agent service on boot
+      ansible.builtin.systemd:
+        enabled: yes
+        name: tempo.service
+    - name: Restart tempo service
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: yes
+        name:  tempo
