@@ -67,8 +67,28 @@ job "demo" {
       driver = "docker"
 
       config {
-        image = "wfaler/demo-app:v10"
+        image = "wfaler/demo-app:v15"
         ports = ["http", "prometheus"]
+
+      }
+      // env {
+      //   TEMPO_ENDPOINT = "10.0.0.7:4317"
+      // }
+
+      template {
+        data = <<EOH
+# Lines starting with a # are ignored
+{{- range service "tempo-grpc" }}
+TEMPO_ENDPOINT="{{ .Address }}:{{ .Port }}"
+{{- end }}
+FOO=bar
+      EOH
+//this is how you get consul kv and vault secrets
+#LOG_LEVEL="{{key "service/geo-api/log-verbosity"}}"
+#API_KEY="{{with secret "secret/geo-api-key"}}{{.Data.value}}{{end}}"
+
+        env         = true
+        destination = "/app/env"
       }
 
       resources {
