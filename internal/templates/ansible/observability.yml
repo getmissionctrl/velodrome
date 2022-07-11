@@ -77,8 +77,15 @@
         owner: loki
         group: loki
         mode: 0755
+    - name: Creates loki data dir
+      file:
+        path: /opt/loki
+        state: directory
+        owner: loki
+        group: loki
+        mode: 0755
     - name: copy loki config
-      copy:
+      template:
         src: loki/loki-config.yml
         dest: /etc/loki/loki-config.yml
         owner: loki
@@ -207,10 +214,6 @@
 - hosts: tempo
   become: yes
   tasks:
-    - name: add group tempo
-      group: name='tempo'
-    - name: add tempo user
-      user: name='tempo' groups="tempo"  
     - name: copy tempo script
       copy:
         src: tempo/setup-tempo.sh
@@ -222,14 +225,10 @@
       file:
         path: /etc/tempo
         state: directory
-        owner: tempo
-        group: tempo
         mode: 0755
     - name: copy tempo.yml
       template:
         src: tempo/tempo.yml
-        owner: tempo
-        group: tempo
         dest: /etc/tempo/tempo.yml
         mode: 0755
     - name: copy service

@@ -10,6 +10,9 @@ import (
 	"text/template"
 )
 
+//go:embed templates/consul/intention.hcl
+var consulIntention string
+
 //go:embed templates/prometheus/prometheus.service
 var prometheusService string
 
@@ -62,6 +65,7 @@ type consulServiceConf struct {
 	template  string
 	hostGroup string
 	file      string
+	name      string
 }
 
 func Observability(inventory, user string) error {
@@ -92,6 +96,10 @@ func mkObservabilityConfigs(inventory, user string) error {
 		return err
 	}
 	err = os.MkdirAll(filepath.Join("config", "grafana"), 0755)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(filepath.Join("config", "intentions"), 0755)
 	if err != nil {
 		return err
 	}
@@ -191,21 +199,25 @@ func mkObservabilityConfigs(inventory, user string) error {
 			template:  tempoGrpcService,
 			hostGroup: "tempo",
 			file:      filepath.Join("config", "tempo", "tempo-grpc.hcl"),
+			name:      "tempo-grpc",
 		},
 		{
 			template:  tempoConsulService,
 			hostGroup: "tempo",
 			file:      filepath.Join("config", "tempo", "tempo.hcl"),
+			name:      "tempo",
 		},
 		{
 			template:  prometheusConsulService,
 			hostGroup: "prometheus",
 			file:      filepath.Join("config", "prometheus", "prometheus.hcl"),
+			name:      "prometheus",
 		},
 		{
 			template:  lokiHttpService,
 			hostGroup: "loki",
 			file:      filepath.Join("config", "loki", "loki.hcl"),
+			name:      "loki",
 		},
 	}
 
@@ -216,8 +228,19 @@ func mkObservabilityConfigs(inventory, user string) error {
 		if err != nil {
 			return err
 		}
+		intention := strings.ReplaceAll(consulIntention, "SRVC", service.name)
+		intentionFile := filepath.Join("config", "intentions", fmt.Sprintf("%s.hcl", service.name))
+		err = os.WriteFile(intentionFile, []byte(intention), 0755)
+		if err != nil {
+			return err
+		}
 
 		err = registerConsul(inv, secrets, service.file)
+		if err != nil {
+			return err
+		}
+
+		err = registerIntention(inv, secrets, intentionFile)
 		if err != nil {
 			return err
 		}
