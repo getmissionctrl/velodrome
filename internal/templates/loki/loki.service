@@ -8,7 +8,7 @@ After=network-online.target
 Type=simple
 User=loki
 Group=loki
-ExecReload=/bin/kill -HUP \$MAINPID
+ExecReload=/bin/kill -HUP $MAINPID
 ExecStart=/usr/local/bin/loki-linux-amd64 \
   --config.file=/etc/loki/loki-config.yml
 
@@ -17,4 +17,3 @@ Restart=always
 
 [Install]
 WantedBy=multi-user.target
-EOF
