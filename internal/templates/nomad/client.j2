@@ -6,7 +6,13 @@ data_dir = "/opt/nomad"
 
 datacenter = "dc1"
 
-#bind_addr = "{{private_ip}}" # was private_ip, but for Contabo, it was same as public
+bind_addr = "{{private_ip}}" # was private_ip, but for Contabo, it was same as public
+
+advertise {
+  http = "{{private_ip}}"
+  rpc  = "{{private_ip}}"
+  serf = "{{private_ip}}"
+}
 
 # Enable the client
 client {
@@ -15,6 +21,7 @@ client {
     path = "/var/run/docker.sock"
     read_only = true
   }
+  network_interface = "ens10"
 }
 
 # Require TLS

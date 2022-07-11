@@ -48,3 +48,12 @@ scrape_configs:
     static_configs:
     - targets:{{ range $key, $value := .ConsulHosts }}
       - {{$value}}:9107{{end }}
+  - job_name: services
+    consul_sd_configs:
+      - server: 'consul.service.consul:8500'
+        token: {{.ConsulToken}}
+        tags:
+          - prometheus
+    relabel_configs:
+      - source_labels: [__meta_consul_service]
+        target_label: service

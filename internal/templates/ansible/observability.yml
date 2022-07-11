@@ -160,7 +160,7 @@
         dest: /etc/systemd/system/prometheus.service
         mode: 0755
     - name: copy prom config
-      copy:
+      template:
         src: prometheus/prometheus.yml
         dest: /etc/prometheus/prometheus.yml
         owner: prometheus

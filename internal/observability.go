@@ -172,9 +172,14 @@ func mkObservabilityConfigs(inventory, user string) error {
 		return e
 	}
 	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, map[string][]string{
+	secrets, err := getSecrets()
+	if err != nil {
+		return err
+	}
+	err = tmpl.Execute(&buf, map[string]interface{}{
 		"ConsulHosts": append(clients, consulServers...),
 		"NomadHosts":  append(clients, nomadServers...),
+		"ConsulToken": "{{CONSUL_BOOTSTRAP_TOKEN}}",
 	})
 	if err != nil {
 		return err
@@ -188,11 +193,6 @@ func mkObservabilityConfigs(inventory, user string) error {
 	output := buf.Bytes()
 
 	err = os.WriteFile(filepath.Join("config", "prometheus", "prometheus.yml"), []byte(output), 0755)
-
-	secrets, err := getSecrets()
-	if err != nil {
-		return err
-	}
 
 	consulServices := []consulServiceConf{
 		{
