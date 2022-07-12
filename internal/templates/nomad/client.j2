@@ -6,13 +6,8 @@ data_dir = "/opt/nomad"
 
 datacenter = "dc1"
 
-bind_addr = "{{private_ip}}" # was private_ip, but for Contabo, it was same as public
+bind_addr = "{{private_ip}}" 
 
-advertise {
-  http = "{{private_ip}}"
-  rpc  = "{{private_ip}}"
-  serf = "{{private_ip}}"
-}
 
 # Enable the client
 client {
