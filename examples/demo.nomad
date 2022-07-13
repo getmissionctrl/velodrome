@@ -20,9 +20,10 @@ job "demo" {
   }
   group "app" {
 
-    count = 1
+    count = 2
 
     network {
+      mode = "bridge"
       port "http" {
         to = 8080
       }
@@ -34,26 +35,28 @@ job "demo" {
 
     service {
       name = "demo-app-http"
-      tags = ["global", "public"]
+      tags = ["public"]
       port = "http"
-      # check {
-      #   name     = "alive"
-      #   type     = "tcp"
-      #   interval = "10s"
-      #   timeout  = "2s"
-      # }
+      connect {
+        sidecar_service {}
+      }
+
+      check {
+        type     = "http"
+        port     = "http"
+        path     = "/_healthz"
+        interval = "5s"
+        timeout  = "2s"
+        // header {
+        //   Authorization = ["Basic ZWxhc3RpYzpjaGFuZ2VtZQ=="]
+        // }
+      }
     }
 
     service {
       name = "demo-app-prometheus"
       tags = ["prometheus"]
       port = "prometheus"
-      # check {
-      #   name     = "alive"
-      #   type     = "tcp"
-      #   interval = "10s"
-      #   timeout  = "2s"
-      # }
     }
 
     restart {
@@ -67,13 +70,13 @@ job "demo" {
       driver = "docker"
 
       config {
-        image = "wfaler/demo-app:v15"
+        image = "wfaler/demo-app:v16"
         ports = ["http", "prometheus"]
-
       }
-      // env {
-      //   TEMPO_ENDPOINT = "10.0.0.7:4317"
-      // }
+      env {
+        PORT = "8080"
+        PROMETHEUS_PORT = "8090"
+      }
 
       template {
         data = <<EOH
@@ -95,7 +98,6 @@ FOO=bar
         cpu    = 500 # 500 MHz
         memory = 256 # 256MB
       }
-
     }
   }
 }

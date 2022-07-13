@@ -11,3 +11,5 @@ service_prefix "" {
 }
 
 acl = "write"
+
+mesh = "write"
