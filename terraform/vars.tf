@@ -54,7 +54,7 @@ variable "server_type"{
   type = string
   default = "cx21"
 }
-var "location"{
+variable "location"{
   type = string
   default = "nbg1" #nbg1, fsn1, hel1 or ash
 }

@@ -1,6 +1,27 @@
-sudo_user: root
 dc_name: hetzner
 inventory: datacenters/hetzner/inventory
-tempo_bucket: tempo
-loki_bucket: loki
-network_interface_name: ens10
+
+cloud_provider_config:
+  internal_network_interface_name: ens10
+  sudo_user: root
+  provider: hetzner
+  hetzner:
+    location: nbg1
+    ssh_keys:
+    - wille.faler@gmail.com
+    server_type: cx21
+    base_server_name: nomad-srv
+    firewall_name: dev_firewall
+    network_name: dev_network
+    allowed_ips:
+    - 85.4.84.201/32
+
+cluster_config:
+  servers: 3 # 3 or 5
+  clients: 2
+  separate_consul_servers: false
+
+observability:
+  single_instance: true # sets all on 1 server if true, 4 separate if false
+  tempo_bucket: tempo
+  loki_bucket: loki

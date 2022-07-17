@@ -16,7 +16,7 @@ client {
     path = "/var/run/docker.sock"
     read_only = true
   }
-  network_interface = "ens10"
+  network_interface = "{{cloud_provider_config.internal_network_interface_name}}"
 }
 
 # Require TLS

@@ -65,15 +65,6 @@ var setupAnsible string
 //go:embed templates/ansible/destroy.yml
 var destroyAnsible string
 
-type secretsConfig struct {
-	ConsulGossipKey        string `yaml:"CONSUL_GOSSIP_KEY"`
-	NomadGossipKey         string `yaml:"NOMAD_GOSSIP_KEY"`
-	NomadClientConsulToken string `yaml:"NOMAD_CLIENT_CONSUL_TOKEN"`
-	NomadServerConsulToken string `yaml:"NOMAD_SERVER_CONSUL_TOKEN"`
-	ConsulAgentToken       string `yaml:"CONSUL_AGENT_TOKEN"`
-	ConsulBootstrapToken   string `yaml:"CONSUL_BOOTSTRAP_TOKEN"`
-}
-
 //calculate bootstrap expect from files
 func Configure(inventoryFile, dcName string) error {
 

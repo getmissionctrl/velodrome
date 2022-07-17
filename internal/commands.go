@@ -19,7 +19,11 @@ func Destroy(inventory, user string) error {
 	return err
 }
 
-func Bootstrap(inventory, dcName, user string) error {
+func Bootstrap(config *Config, configPath string) error {
+	inventory := config.Inventory
+	dcName := config.DC
+	user := config.CloudProviderConfig.User
+
 	err := Configure(inventory, dcName)
 	if err != nil {
 		return err
@@ -27,7 +31,7 @@ func Bootstrap(inventory, dcName, user string) error {
 	setup := filepath.Join("config", "setup.yml")
 	secrets := filepath.Join("config", "secrets", "secrets.yml")
 
-	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s", setup, inventory, user, secrets))
+	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s -e @%s", setup, inventory, user, secrets, configPath))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -39,7 +43,7 @@ func Bootstrap(inventory, dcName, user string) error {
 	hasBootstrapped, err := BootstrapConsul(inventory)
 	if hasBootstrapped {
 		fmt.Println("Bootstrapped Consul ACL, re-running Ansible...")
-		cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s", setup, inventory, user, secrets))
+		cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s  -e @%s", setup, inventory, user, secrets, configPath))
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 

@@ -62,7 +62,7 @@ resource "hcloud_server" "cluster_node" {
   name        = "${var.base_server_name}${count.index+1}"
   image       = "ubuntu-22.04"
   server_type = var.server_type
-  location = vars.location
+  location = var.location
   placement_group_id = hcloud_placement_group.placement_group.id
   firewall_ids = [hcloud_firewall.network_firewall.id]
 

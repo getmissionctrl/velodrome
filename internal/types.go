@@ -1,16 +1,28 @@
 package internal
 
+import (
+	"io/ioutil"
+	"path/filepath"
+
+	"gopkg.in/yaml.v3"
+)
+
 type Config struct {
-	User             string `yaml:"sudo_user"`
-	DC               string `yaml:"dc_name"`
-	Inventory        string `yaml:"inventory"`
-	TempoBucket      string `yaml:"tempo_bucket"`
-	LokiBucket       string `yaml:"loki_bucket"`
-	NetworkInterface string `yaml:"network_interface_name"`
+	DC                  string              `yaml:"dc_name"`
+	Inventory           string              `yaml:"inventory"`
+	CloudProviderConfig CloudProvider       `yaml:"cloud_provider_config"`
+	ObservabilityConfig ObservabilityConfig `yaml:"observability_config"`
 }
 
-func LoadConfig(file string) (*Config, error) {
-	return nil, nil
+type CloudProvider struct {
+	User             string `yaml:"sudo_user"`
+	NetworkInterface string `yaml:"internal_network_interface_name"`
+}
+
+type ObservabilityConfig struct {
+	TempoBucket    string `yaml:"tempo_bucket"`
+	LokiBucket     string `yaml:"loki_bucket"`
+	SingleInstance bool   `yaml:"single_instance"`
 }
 
 type secretsConfig struct {
@@ -20,4 +32,17 @@ type secretsConfig struct {
 	NomadServerConsulToken string `yaml:"NOMAD_SERVER_CONSUL_TOKEN"`
 	ConsulAgentToken       string `yaml:"CONSUL_AGENT_TOKEN"`
 	ConsulBootstrapToken   string `yaml:"CONSUL_BOOTSTRAP_TOKEN"`
+}
+
+func LoadConfig(file string) (*Config, error) {
+	bytes, err := ioutil.ReadFile(filepath.Clean(file))
+	if err != nil {
+		return nil, err
+	}
+	var config Config
+	err = yaml.Unmarshal(bytes, &config)
+	if err != nil {
+		return nil, err
+	}
+	return &config, nil
 }

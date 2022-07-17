@@ -33,15 +33,18 @@ func main() {
 }
 
 func bootstrap() *cobra.Command {
-	var inventoryFile string
-	var user string
-	var dcName string
+	var configFile string
 	cmd := &cobra.Command{
 		Use:   "up",
 		Short: "bootstraps and starts a cluster",
 		Long:  `bootstraps and starts a cluster`,
 		Run: func(cmd *cobra.Command, args []string) {
-			err := internal.Bootstrap(inventoryFile, dcName, user)
+			config, err := internal.LoadConfig(configFile)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			err = internal.Bootstrap(config, configFile)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -49,41 +52,37 @@ func bootstrap() *cobra.Command {
 		},
 	}
 
-	addFlags(cmd, &inventoryFile, &user)
-	cmd.Flags().StringVarP(&dcName, "datacentre", "d", "", "name of data center")
-
-	err := cmd.MarkFlagRequired("datacentre")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	addFlags(cmd, &configFile)
 
 	return cmd
 }
 
 func observability() *cobra.Command {
-	var inventoryFile string
-	var user string
+	var configFile string
 	cmd := &cobra.Command{
 		Use:   "observability",
 		Short: "adds observability to a cluster",
 		Long:  `adds observability a cluster`,
 		Run: func(cmd *cobra.Command, args []string) {
-			err := internal.Observability(inventoryFile, user)
+			config, err := internal.LoadConfig(configFile)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			err = internal.Observability(config.Inventory, config.CloudProviderConfig.User)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
 		},
 	}
-	addFlags(cmd, &inventoryFile, &user)
+	addFlags(cmd, &configFile)
 
 	return cmd
 }
 
 func destroy() *cobra.Command {
-	var inventoryFile string
-	var user string
+	var configFile string
 	yes := ""
 	cmd := &cobra.Command{
 		Use:   "destroy",
@@ -102,28 +101,26 @@ func destroy() *cobra.Command {
 				}
 			}
 			if text == "yes\n" || text == "yes" {
-				internal.Destroy(inventoryFile, user)
+				config, err := internal.LoadConfig(configFile)
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+				internal.Destroy(config.Inventory, config.CloudProviderConfig.User)
 				return
 			}
 			fmt.Println("Delete cancelled")
 		},
 	}
-	addFlags(cmd, &inventoryFile, &user)
+	addFlags(cmd, &configFile)
 
 	return cmd
 }
 
-func addFlags(cmd *cobra.Command, inventoryFile, user *string) {
-	cmd.Flags().StringVarP(inventoryFile, "inventory", "i", "", "inventory file")
-	cmd.Flags().StringVarP(user, "user", "u", "", "User to run as against servers")
+func addFlags(cmd *cobra.Command, file *string) {
+	cmd.Flags().StringVarP(file, "config.file", "f", "", "configuration file")
 
-	err := cmd.MarkFlagRequired("inventory")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	err = cmd.MarkFlagRequired("user")
+	err := cmd.MarkFlagRequired("config.file")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
