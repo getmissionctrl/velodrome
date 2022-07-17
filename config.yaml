@@ -1,0 +1,6 @@
+sudo_user: root
+dc_name: hetzner
+inventory: datacenters/hetzner/inventory
+tempo_bucket: tempo
+loki_bucket: loki
+network_interface_name: ens10

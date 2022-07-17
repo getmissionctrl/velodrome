@@ -1,20 +1,20 @@
 [consul_servers]
-159.69.9.47 private_ip=10.0.0.2 host_name=nomad-cluster-nbg-1
-167.235.23.223 private_ip=10.0.0.5 host_name=nomad-cluster-nbg-2
-167.235.59.203 private_ip=10.0.0.6 host_name=nomad-cluster-nbg-3
+159.69.30.244 private_ip=10.0.0.2 host_name=nomad-srv1
+159.69.30.93 private_ip=10.0.0.3 host_name=nomad-srv2
+159.69.18.81 private_ip=10.0.0.4 host_name=nomad-srv3
 [nomad_servers]
-159.69.9.47 private_ip=10.0.0.2 host_name=nomad-cluster-nbg-1
-167.235.23.223 private_ip=10.0.0.5 host_name=nomad-cluster-nbg-2
-167.235.59.203 private_ip=10.0.0.6 host_name=nomad-cluster-nbg-3
+159.69.30.244 private_ip=10.0.0.2 host_name=nomad-srv1
+159.69.30.93 private_ip=10.0.0.3 host_name=nomad-srv2
+159.69.18.81 private_ip=10.0.0.4 host_name=nomad-srv3
 [clients]
-23.88.98.125 private_ip=10.0.0.3 host_name=nomad-cluster-nbg-4
-167.235.73.180 private_ip=10.0.0.4 host_name=nomad-cluster-nbg-5
+157.90.225.83 private_ip=10.0.0.5 host_name=nomad-srv4
+159.69.29.243 private_ip=10.0.0.6 host_name=nomad-srv5
 ## Observability
 [grafana]
-167.235.55.204
+116.203.60.253 private_ip=10.0.0.7 host_name=nomad-srv6
 [prometheus]
-167.235.55.204 private_ip=10.0.0.7 host_name=nomad-cluster-nbg-6
+116.203.60.253 private_ip=10.0.0.7 host_name=nomad-srv6
 [loki]
-167.235.55.204 private_ip=10.0.0.7 host_name=nomad-cluster-nbg-6
+116.203.60.253 private_ip=10.0.0.7 host_name=nomad-srv6
 [tempo]
-167.235.55.204 private_ip=10.0.0.7 host_name=nomad-cluster-nbg-6
+116.203.60.253 private_ip=10.0.0.7 host_name=nomad-srv6
