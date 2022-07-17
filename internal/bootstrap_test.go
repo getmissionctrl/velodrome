@@ -15,7 +15,7 @@ import (
 func TestMakeConsulPoliciesAndHashiConfigs(t *testing.T) {
 	inv, err := readInventory(filepath.Join("testdata", "inventory"))
 	assert.NoError(t, err)
-	err = makeConsulPolicies(inv)
+	err = makeConsulPolicies(inv, "config")
 	assert.NoError(t, err)
 
 	defer func() {
@@ -40,7 +40,7 @@ func TestMakeConsulPoliciesAndHashiConfigs(t *testing.T) {
 
 	inv, err = readInventory(filepath.Join("testdata", "inventory"))
 	assert.NoError(t, err)
-	makeConfigs(inv, "hetzner")
+	makeConfigs(inv, "config", "hetzner")
 
 	serverBytes, err := ioutil.ReadFile(filepath.Join("config", "consul", "server.j2"))
 	assert.NoError(t, err)
@@ -74,11 +74,11 @@ func TestMakeSecrets(t *testing.T) {
 	}()
 	inv, err := readInventory(filepath.Join("testdata", "inventory"))
 	assert.NoError(t, err)
-	err = Secrets(inv, "dc1")
+	err = Secrets(inv, "config", "dc1")
 	assert.NoError(t, err)
 	bytes, err := ioutil.ReadFile(filepath.Join("config", "secrets", "secrets.yml"))
 	assert.NoError(t, err)
-	err = Secrets(inv, "dc1")
+	err = Secrets(inv, "config", "dc1")
 	assert.NoError(t, err)
 	bytes2, err := ioutil.ReadFile(filepath.Join("config", "secrets", "secrets.yml"))
 	assert.NoError(t, err)
@@ -131,7 +131,7 @@ func TestMakeSecrets(t *testing.T) {
 		assertFileExists(t, filepath.Join(nomadDir, path))
 	}
 
-	secrets, err := getSecrets()
+	secrets, err := getSecrets("config")
 	assert.NoError(t, err)
 	assert.Equal(t, "TBD", secrets.ConsulBootstrapToken)
 	assert.Equal(t, "TBD", secrets.ConsulAgentToken)

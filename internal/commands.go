@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 )
 
-func Destroy(inventory, user string) error {
-	destroy := filepath.Join("config", "destroy.yml")
+func Destroy(inventory, baseDir, user string) error {
+	destroy := filepath.Join(baseDir, "destroy.yml")
 	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("ansible-playbook %s -i %s -u %s", destroy, inventory, user))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -23,13 +23,16 @@ func Bootstrap(config *Config, configPath string) error {
 	inventory := config.Inventory
 	dcName := config.DC
 	user := config.CloudProviderConfig.User
+	baseDir := config.BaseDir
 
-	err := Configure(inventory, dcName)
+	fmt.Println(config.ObservabilityConfig)
+
+	err := Configure(inventory, baseDir, dcName)
 	if err != nil {
 		return err
 	}
-	setup := filepath.Join("config", "setup.yml")
-	secrets := filepath.Join("config", "secrets", "secrets.yml")
+	setup := filepath.Join(baseDir, "setup.yml")
+	secrets := filepath.Join(baseDir, "secrets", "secrets.yml")
 
 	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s -e @%s", setup, inventory, user, secrets, configPath))
 	cmd.Stdout = os.Stdout
@@ -40,7 +43,7 @@ func Bootstrap(config *Config, configPath string) error {
 	if err != nil {
 		return err
 	}
-	hasBootstrapped, err := BootstrapConsul(inventory)
+	hasBootstrapped, err := BootstrapConsul(inventory, baseDir)
 	if hasBootstrapped {
 		fmt.Println("Bootstrapped Consul ACL, re-running Ansible...")
 		cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s  -e @%s", setup, inventory, user, secrets, configPath))
@@ -49,6 +52,13 @@ func Bootstrap(config *Config, configPath string) error {
 
 		cmd.Start()
 		err = cmd.Wait()
+		if err != nil {
+			return err
+		}
+	}
+
+	if config.ObservabilityConfig != nil {
+		Observability(inventory, configPath, baseDir, user)
 	}
 
 	return err

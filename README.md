@@ -101,7 +101,7 @@ Run ansible:
     - [x] Nomad metrics
     - [x] Consul metrics
     - [x] Log aggregation of jobs
-    - [ ] Metrics produced by jobs
+    - [x] Metrics produced by jobs
     - [x] Job tracing
     - [ ] Host monitoring (disk, cpu, memory)
 - [ ] Networking
@@ -110,13 +110,16 @@ Run ansible:
     - [x] Use consul as DNS
     - [ ] Pull private docker images
     - [ ] Observability ingress
-    - [ ] Auto-accept server signatures on first time connect
+    - [x] Auto-accept server signatures on first time connect
 - [ ] Vault setup
     - [ ] setup cluster secrets
     - [ ] template configs
     - [ ] Systemctl script & startup
     - [ ] Auto-unlock with script/ansible/terraform
     - [ ] Integrate with Nomad
+- [ ] Overall setup
+    - [ ] Terraform var generation
+    - [ ] Generate Ansible inventory from Terraform output
 - [ ] Grafana/Dashboards
     - [ ] Dashboards
         - [ ] Consul health
@@ -130,7 +133,7 @@ Run ansible:
         - [ ] Consul health
         - [ ] Nomad health
         - [ ] Vault health
-        - [ ] Host health
+        - [ ] Host health (CPU, memory, disk)
 
 # Kill orphaned nomad mounts
 

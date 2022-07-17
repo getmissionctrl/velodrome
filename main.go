@@ -23,7 +23,7 @@ func main() {
 		},
 	}
 
-	rootCmd.AddCommand(bootstrap(), destroy(), observability())
+	rootCmd.AddCommand(sync(), destroy(), observability())
 
 	err := rootCmd.Execute()
 	if err != nil {
@@ -32,12 +32,12 @@ func main() {
 	}
 }
 
-func bootstrap() *cobra.Command {
+func sync() *cobra.Command {
 	var configFile string
 	cmd := &cobra.Command{
-		Use:   "up",
-		Short: "bootstraps and starts a cluster",
-		Long:  `bootstraps and starts a cluster`,
+		Use:   "sync",
+		Short: "bootstraps and starts a cluster or syncs the cluster to its desired state",
+		Long:  `bootstraps and starts a cluster or syncs the cluster to its desired state`,
 		Run: func(cmd *cobra.Command, args []string) {
 			config, err := internal.LoadConfig(configFile)
 			if err != nil {
@@ -69,7 +69,7 @@ func observability() *cobra.Command {
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			err = internal.Observability(config.Inventory, config.CloudProviderConfig.User)
+			err = internal.Observability(config.Inventory, configFile, config.BaseDir, config.CloudProviderConfig.User)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -106,7 +106,7 @@ func destroy() *cobra.Command {
 					fmt.Println(err)
 					os.Exit(1)
 				}
-				internal.Destroy(config.Inventory, config.CloudProviderConfig.User)
+				internal.Destroy(config.Inventory, config.BaseDir, config.CloudProviderConfig.User)
 				return
 			}
 			fmt.Println("Delete cancelled")

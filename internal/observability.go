@@ -68,17 +68,17 @@ type consulServiceConf struct {
 	name      string
 }
 
-func Observability(inventory, user string) error {
+func Observability(inventory, configFile, baseDir, user string) error {
 
-	err := mkObservabilityConfigs(inventory, user)
+	err := mkObservabilityConfigs(inventory, baseDir, user)
 	if err != nil {
 		return err
 	}
 
-	setup := filepath.Join("config", "observability.yml")
-	secrets := filepath.Join("config", "secrets", "secrets.yml")
+	setup := filepath.Join(baseDir, "observability.yml")
+	secrets := filepath.Join(baseDir, "secrets", "secrets.yml")
 
-	err = runCmd("", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s", setup, inventory, user, secrets), os.Stdout)
+	err = runCmd("", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s -e @%s", setup, inventory, user, secrets, configFile), os.Stdout)
 	if err != nil {
 		return err
 	}
@@ -86,75 +86,75 @@ func Observability(inventory, user string) error {
 	return nil
 }
 
-func mkObservabilityConfigs(inventory, user string) error {
-	err := os.MkdirAll(filepath.Join("config", "prometheus"), 0755)
+func mkObservabilityConfigs(inventory, baseDir, user string) error {
+	err := os.MkdirAll(filepath.Join(baseDir, "prometheus"), 0755)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(filepath.Join("config", "loki"), 0755)
+	err = os.MkdirAll(filepath.Join(baseDir, "loki"), 0755)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(filepath.Join("config", "grafana"), 0755)
+	err = os.MkdirAll(filepath.Join(baseDir, "grafana"), 0755)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(filepath.Join("config", "intentions"), 0755)
-	if err != nil {
-		return err
-	}
-
-	err = os.MkdirAll(filepath.Join("config", "tempo"), 0755)
+	err = os.MkdirAll(filepath.Join(baseDir, "intentions"), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join("config", "prometheus", "prometheus.service"), []byte(prometheusService), 0755)
+	err = os.MkdirAll(filepath.Join(baseDir, "tempo"), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join("config", "prometheus", "install-prometheus.sh"), []byte(prometheusInstall), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "prometheus", "prometheus.service"), []byte(prometheusService), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join("config", "observability.yml"), []byte(observabilityAnsible), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "prometheus", "install-prometheus.sh"), []byte(prometheusInstall), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join("config", "loki", "setup-loki-agent.sh"), []byte(lokiDockerAgent), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "observability.yml"), []byte(observabilityAnsible), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join("config", "loki", "loki.service"), []byte(lokiService), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "loki", "setup-loki-agent.sh"), []byte(lokiDockerAgent), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join("config", "loki", "promtail.service"), []byte(promtailService), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "loki", "loki.service"), []byte(lokiService), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join("config", "loki", "loki-config.yml"), []byte(lokiConfig), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "loki", "promtail.service"), []byte(promtailService), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join("config", "tempo", "tempo.yml"), []byte(tempoConfig), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "loki", "loki-config.yml"), []byte(lokiConfig), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join("config", "tempo", "tempo.service"), []byte(tempoService), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "tempo", "tempo.yml"), []byte(tempoConfig), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join("config", "tempo", "setup-tempo.sh"), []byte(tempoInstall), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "tempo", "tempo.service"), []byte(tempoService), 0755)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(filepath.Join(baseDir, "tempo", "setup-tempo.sh"), []byte(tempoInstall), 0755)
 	if err != nil {
 		return err
 	}
@@ -172,7 +172,7 @@ func mkObservabilityConfigs(inventory, user string) error {
 		return e
 	}
 	var buf bytes.Buffer
-	secrets, err := getSecrets()
+	secrets, err := getSecrets(baseDir)
 	if err != nil {
 		return err
 	}
@@ -185,38 +185,38 @@ func mkObservabilityConfigs(inventory, user string) error {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join("config", "loki", "promtail.yml"), []byte(promtailConf), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "loki", "promtail.yml"), []byte(promtailConf), 0755)
 	if err != nil {
 		return err
 	}
 
 	output := buf.Bytes()
 
-	err = os.WriteFile(filepath.Join("config", "prometheus", "prometheus.yml"), []byte(output), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "prometheus", "prometheus.yml"), []byte(output), 0755)
 
 	consulServices := []consulServiceConf{
 		{
 			template:  tempoGrpcService,
 			hostGroup: "tempo",
-			file:      filepath.Join("config", "tempo", "tempo-grpc.hcl"),
+			file:      filepath.Join(baseDir, "tempo", "tempo-grpc.hcl"),
 			name:      "tempo-grpc",
 		},
 		{
 			template:  tempoConsulService,
 			hostGroup: "tempo",
-			file:      filepath.Join("config", "tempo", "tempo.hcl"),
+			file:      filepath.Join(baseDir, "tempo", "tempo.hcl"),
 			name:      "tempo",
 		},
 		{
 			template:  prometheusConsulService,
 			hostGroup: "prometheus",
-			file:      filepath.Join("config", "prometheus", "prometheus.hcl"),
+			file:      filepath.Join(baseDir, "prometheus", "prometheus.hcl"),
 			name:      "prometheus",
 		},
 		{
 			template:  lokiHttpService,
 			hostGroup: "loki",
-			file:      filepath.Join("config", "loki", "loki.hcl"),
+			file:      filepath.Join(baseDir, "loki", "loki.hcl"),
 			name:      "loki",
 		},
 	}
@@ -229,18 +229,18 @@ func mkObservabilityConfigs(inventory, user string) error {
 			return err
 		}
 		intention := strings.ReplaceAll(consulIntention, "SRVC", service.name)
-		intentionFile := filepath.Join("config", "intentions", fmt.Sprintf("%s.hcl", service.name))
+		intentionFile := filepath.Join(baseDir, "intentions", fmt.Sprintf("%s.hcl", service.name))
 		err = os.WriteFile(intentionFile, []byte(intention), 0755)
 		if err != nil {
 			return err
 		}
 
-		err = registerConsul(inv, secrets, service.file)
+		err = registerConsul(inv, secrets, baseDir, service.file)
 		if err != nil {
 			return err
 		}
 
-		err = registerIntention(inv, secrets, intentionFile)
+		err = registerIntention(inv, secrets, baseDir, intentionFile)
 		if err != nil {
 			return err
 		}

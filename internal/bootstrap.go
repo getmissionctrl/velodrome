@@ -66,19 +66,19 @@ var setupAnsible string
 var destroyAnsible string
 
 //calculate bootstrap expect from files
-func Configure(inventoryFile, dcName string) error {
+func Configure(inventoryFile, baseDir, dcName string) error {
 
-	err := os.MkdirAll(filepath.Join("config"), 0755)
+	err := os.MkdirAll(filepath.Join(baseDir), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join("config", "setup.yml"), []byte(strings.ReplaceAll(setupAnsible, "dc1", dcName)), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "setup.yml"), []byte(strings.ReplaceAll(setupAnsible, "dc1", dcName)), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join("config", "destroy.yml"), []byte(destroyAnsible), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "destroy.yml"), []byte(destroyAnsible), 0755)
 	if err != nil {
 		return err
 	}
@@ -87,15 +87,15 @@ func Configure(inventoryFile, dcName string) error {
 	if err != nil {
 		return err
 	}
-	err = makeConsulPolicies(inv)
+	err = makeConsulPolicies(inv, baseDir)
 	if err != nil {
 		return err
 	}
-	err = makeConfigs(inv, dcName)
+	err = makeConfigs(inv, baseDir, dcName)
 	if err != nil {
 		return err
 	}
-	err = Secrets(inv, dcName)
+	err = Secrets(inv, baseDir, dcName)
 	return err
 }
 
@@ -117,8 +117,8 @@ func readInventory(inventoryFile string) (*aini.InventoryData, error) {
 	return aini.Parse(f)
 }
 
-func getSecrets() (*secretsConfig, error) {
-	bytes, err := ioutil.ReadFile(filepath.Join("config", "secrets", "secrets.yml"))
+func getSecrets(baseDir string) (*secretsConfig, error) {
+	bytes, err := ioutil.ReadFile(filepath.Join(baseDir, "secrets", "secrets.yml"))
 	if err != nil {
 		return nil, err
 	}
@@ -131,13 +131,13 @@ func getSecrets() (*secretsConfig, error) {
 
 }
 
-func makeConsulPolicies(inv *aini.InventoryData) error {
+func makeConsulPolicies(inv *aini.InventoryData, baseDir string) error {
 
-	err := os.MkdirAll(filepath.Join("config", "consul"), 0755)
+	err := os.MkdirAll(filepath.Join(baseDir, "consul"), 0755)
 	if err != nil {
 		return err
 	}
-	_ = os.Remove(filepath.Join("config", "consul", "consul-policies.hcl"))
+	_ = os.Remove(filepath.Join(baseDir, "consul", "consul-policies.hcl"))
 
 	hostMap := make(map[string]string)
 	hosts := []string{}
@@ -161,28 +161,28 @@ func makeConsulPolicies(inv *aini.InventoryData) error {
 	}
 
 	output := buf.Bytes()
-	err = os.WriteFile(filepath.Join("config", "consul", "consul-policies.hcl"), output, 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "consul", "consul-policies.hcl"), output, 0755)
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(filepath.Join("config", "consul", "nomad-client-policy.hcl"), []byte(nomadClientPolicy), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "consul", "nomad-client-policy.hcl"), []byte(nomadClientPolicy), 0755)
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(filepath.Join("config", "consul", "install-exporter.sh"), []byte(installExporter), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "consul", "install-exporter.sh"), []byte(installExporter), 0755)
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(filepath.Join("config", "consul", "consul-exporter.service"), []byte(consulExporterService), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "consul", "consul-exporter.service"), []byte(consulExporterService), 0755)
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(filepath.Join("config", "consul", "nomad-server-policy.hcl"), []byte(nomadServerPolicy), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "consul", "nomad-server-policy.hcl"), []byte(nomadServerPolicy), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join("config", "consul", "anonymous-policy.hcl"), []byte(anonymousDns), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "consul", "anonymous-policy.hcl"), []byte(anonymousDns), 0755)
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func getPrivateHosts(inv *aini.InventoryData, group string) []string {
 	return hosts
 }
 
-func makeConfigs(inv *aini.InventoryData, dcName string) error {
+func makeConfigs(inv *aini.InventoryData, baseDir, dcName string) error {
 	hostMap := make(map[string]string)
 	hosts := ""
 	first := true
@@ -237,7 +237,7 @@ func makeConfigs(inv *aini.InventoryData, dcName string) error {
 	}
 	clientWithDC := strings.ReplaceAll(consulClient, "dc1", dcName)
 	clientWithDC = strings.ReplaceAll(clientWithDC, "join_servers", hosts)
-	err := os.WriteFile(filepath.Join("config", "consul", "client.j2"), []byte(clientWithDC), 0755)
+	err := os.WriteFile(filepath.Join(baseDir, "consul", "client.j2"), []byte(clientWithDC), 0755)
 	if err != nil {
 		return err
 	}
@@ -245,16 +245,16 @@ func makeConfigs(inv *aini.InventoryData, dcName string) error {
 	serverWithDC := strings.ReplaceAll(consulServer, "dc1", dcName)
 	serverWithDC = strings.ReplaceAll(serverWithDC, "join_servers", hosts)
 	serverWithDC = strings.ReplaceAll(serverWithDC, "EXPECTS_NO", fmt.Sprintf("%v", len(getHosts(inv, "consul_servers"))))
-	err = os.WriteFile(filepath.Join("config", "consul", "server.j2"), []byte(serverWithDC), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "consul", "server.j2"), []byte(serverWithDC), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join("config", "consul", "resolved.conf"), []byte(resolvedConf), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "consul", "resolved.conf"), []byte(resolvedConf), 0755)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(filepath.Join("config", "nomad"), 0755)
+	err = os.MkdirAll(filepath.Join(baseDir, "nomad"), 0755)
 	if err != nil {
 		return err
 	}
@@ -265,24 +265,24 @@ func makeConfigs(inv *aini.InventoryData, dcName string) error {
 	nomadServer = strings.ReplaceAll(nomadServer, "dc1", dcName)
 	nomadClient = strings.ReplaceAll(nomadClient, "dc1", dcName)
 
-	err = os.WriteFile(filepath.Join("config", "nomad", "server.j2"), []byte(nomadServer), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "nomad", "server.j2"), []byte(nomadServer), 0755)
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(filepath.Join("config", "nomad", "client.j2"), []byte(nomadClient), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "nomad", "client.j2"), []byte(nomadClient), 0755)
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(filepath.Join("config", "nomad", "nomad-server.service"), []byte(nomadServerService), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "nomad", "nomad-server.service"), []byte(nomadServerService), 0755)
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(filepath.Join("config", "nomad", "nomad-client.service"), []byte(nomadClientService), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "nomad", "nomad-client.service"), []byte(nomadClientService), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join("config", "consul", "consul.service"), []byte(consulService), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "consul", "consul.service"), []byte(consulService), 0755)
 	if err != nil {
 		return err
 	}
@@ -290,14 +290,14 @@ func makeConfigs(inv *aini.InventoryData, dcName string) error {
 	return nil
 }
 
-func Secrets(inv *aini.InventoryData, dcName string) error {
+func Secrets(inv *aini.InventoryData, baseDir, dcName string) error {
 	var out bytes.Buffer
 	err := runCmd("", "consul keygen", &out)
 	if err != nil {
 		return err
 	}
-	consulSecretDir := filepath.Join("config", "secrets", "consul")
-	nomadSecretDir := filepath.Join("config", "secrets", "nomad")
+	consulSecretDir := filepath.Join(baseDir, "secrets", "consul")
+	nomadSecretDir := filepath.Join(baseDir, "secrets", "nomad")
 	err = os.MkdirAll(consulSecretDir, 0755)
 	consulGossipKey := strings.ReplaceAll(string(out.Bytes()), "\n", "")
 
@@ -308,6 +308,9 @@ func Secrets(inv *aini.InventoryData, dcName string) error {
 		return err
 	}
 	nomadGossipKey := strings.ReplaceAll(string(out2.Bytes()), "\n", "")
+	if os.Getenv("S3_ENDPOINT") == "" || os.Getenv("S3_SECRET_KEY") == "" || os.Getenv("S3_ACCESS_KEY") == "" {
+		return fmt.Errorf("s3 compatible env variables missing for storing state: please set S3_ENDPOINT, S3_SECRET_KEY & S3_ACCESS_KEY")
+	}
 
 	secrets := &secretsConfig{
 		ConsulGossipKey:        consulGossipKey,
@@ -316,14 +319,17 @@ func Secrets(inv *aini.InventoryData, dcName string) error {
 		NomadServerConsulToken: "TBD",
 		ConsulAgentToken:       "TBD",
 		ConsulBootstrapToken:   "TBD",
+		S3Endpoint:             os.Getenv("S3_ENDPOINT"),
+		S3SecretKey:            os.Getenv("S3_SECRET_KEY"),
+		S3AccessKey:            os.Getenv("S3_ACCESS_KEY"),
 	}
 
-	if _, err := os.Stat(filepath.Join("config", "secrets", "secrets.yml")); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(filepath.Join(baseDir, "secrets", "secrets.yml")); errors.Is(err, os.ErrNotExist) {
 		d, err := yaml.Marshal(&secrets)
 		if err != nil {
 			return err
 		}
-		err = os.WriteFile(filepath.Join("config", "secrets", "secrets.yml"), d, 0755)
+		err = os.WriteFile(filepath.Join(baseDir, "secrets", "secrets.yml"), d, 0755)
 		if err != nil {
 			return err
 		}
@@ -336,7 +342,7 @@ func Secrets(inv *aini.InventoryData, dcName string) error {
 	if err != nil {
 		return err
 	}
-	if _, err := os.Stat(filepath.Join("config", "secrets", "consul", "consul-agent-ca.pem")); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(filepath.Join(baseDir, "secrets", "consul", "consul-agent-ca.pem")); errors.Is(err, os.ErrNotExist) {
 		err = runCmd(consulSecretDir, "consul tls ca create", os.Stdout)
 		if err != nil {
 			return err
@@ -348,7 +354,7 @@ func Secrets(inv *aini.InventoryData, dcName string) error {
 
 	}
 
-	if _, err := os.Stat(filepath.Join("config", "secrets", "nomad", "cli.pem")); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(filepath.Join(baseDir, "secrets", "nomad", "cli.pem")); errors.Is(err, os.ErrNotExist) {
 		err = runCmd(nomadSecretDir, "cfssl print-defaults csr | cfssl gencert -initca - | cfssljson -bare nomad-ca", os.Stdout)
 		if err != nil {
 			return err

@@ -34,7 +34,7 @@ storage_config:
    shared_store: s3
 
  aws:
-   bucketnames: {{loki_bucket}}
+   bucketnames: {{observability_config.loki_bucket}}
    endpoint: {{s3_endpoint}}
    region: auto
    access_key_id: {{s3_access_key}}

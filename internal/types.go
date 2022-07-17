@@ -8,10 +8,11 @@ import (
 )
 
 type Config struct {
-	DC                  string              `yaml:"dc_name"`
-	Inventory           string              `yaml:"inventory"`
-	CloudProviderConfig CloudProvider       `yaml:"cloud_provider_config"`
-	ObservabilityConfig ObservabilityConfig `yaml:"observability_config"`
+	DC                  string               `yaml:"dc_name"`
+	Inventory           string               `yaml:"inventory"`
+	BaseDir             string               `yaml:"baseDir"`
+	CloudProviderConfig CloudProvider        `yaml:"cloud_provider_config"`
+	ObservabilityConfig *ObservabilityConfig `yaml:"observability_config"`
 }
 
 type CloudProvider struct {
@@ -32,6 +33,9 @@ type secretsConfig struct {
 	NomadServerConsulToken string `yaml:"NOMAD_SERVER_CONSUL_TOKEN"`
 	ConsulAgentToken       string `yaml:"CONSUL_AGENT_TOKEN"`
 	ConsulBootstrapToken   string `yaml:"CONSUL_BOOTSTRAP_TOKEN"`
+	S3Endpoint             string `yaml:"s3_endpoint"`
+	S3AccessKey            string `yaml:"s3_access_key"`
+	S3SecretKey            string `yaml:"s3_secret_key"`
 }
 
 func LoadConfig(file string) (*Config, error) {

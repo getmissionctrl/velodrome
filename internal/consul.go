@@ -29,34 +29,34 @@ func parseConsulToken(file string) (string, error) {
 	return "", nil
 }
 
-func registerConsul(inventory *aini.InventoryData, secrets *secretsConfig, file string) error {
-	exports, err := getExports(inventory, secrets)
+func registerConsul(inventory *aini.InventoryData, secrets *secretsConfig, baseDir, file string) error {
+	exports, err := getExports(inventory, secrets, baseDir)
 	if err != nil {
 		return err
 	}
 	return runCmd("", fmt.Sprintf(`%sconsul services register %s`, exports, file), os.Stdout)
 }
 
-func registerIntention(inventory *aini.InventoryData, secrets *secretsConfig, file string) error {
-	exports, err := getExports(inventory, secrets)
+func registerIntention(inventory *aini.InventoryData, secrets *secretsConfig, baseDir, file string) error {
+	exports, err := getExports(inventory, secrets, baseDir)
 	if err != nil {
 		return err
 	}
 	return runCmd("", fmt.Sprintf(`%sconsul config write %s`, exports, file), os.Stdout)
 }
 
-func getExports(inventory *aini.InventoryData, secrets *secretsConfig) (string, error) {
+func getExports(inventory *aini.InventoryData, secrets *secretsConfig, baseDir string) (string, error) {
 	hosts := getHosts(inventory, "consul_servers")
 	if len(hosts) == 0 {
 		return "", fmt.Errorf("no consul servers found in inventory")
 	}
 	host := hosts[0]
 	token := secrets.ConsulBootstrapToken
-	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8501" && export CONSUL_HTTP_TOKEN="%s" && export CONSUL_CLIENT_CERT=config/secrets/consul/consul-agent-ca.pem && export CONSUL_CLIENT_KEY=config/secrets/consul/consul-agent-ca-key.pem && export CONSUL_HTTP_SSL=true && export CONSUL_HTTP_SSL_VERIFY=false && `, host, token)
+	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8501" && export CONSUL_HTTP_TOKEN="%s" && export CONSUL_CLIENT_CERT=%s/secrets/consul/consul-agent-ca.pem && export CONSUL_CLIENT_KEY=%s/secrets/consul/consul-agent-ca-key.pem && export CONSUL_HTTP_SSL=true && export CONSUL_HTTP_SSL_VERIFY=false && `, host, token, baseDir, baseDir)
 	return exports, nil
 }
 
-func regenerateConsulPolicies(inventory *aini.InventoryData, secrets *secretsConfig) error {
+func regenerateConsulPolicies(inventory *aini.InventoryData, secrets *secretsConfig, baseDir string) error {
 	token := secrets.ConsulBootstrapToken
 	hosts := getHosts(inventory, "consul_servers")
 	if len(hosts) == 0 {
@@ -64,20 +64,20 @@ func regenerateConsulPolicies(inventory *aini.InventoryData, secrets *secretsCon
 	}
 	host := hosts[0]
 
-	err := makeConsulPolicies(inventory)
+	err := makeConsulPolicies(inventory, baseDir)
 	if err != nil {
 		return err
 	}
 	fmt.Println("Updating consul policies")
-	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8501" && export CONSUL_HTTP_TOKEN="%s" && export CONSUL_CLIENT_CERT=config/secrets/consul/consul-agent-ca.pem && export CONSUL_CLIENT_KEY=config/secrets/consul/consul-agent-ca-key.pem && export CONSUL_HTTP_SSL=true && export CONSUL_HTTP_SSL_VERIFY=false && `, host, token)
-	policyConsul := filepath.Join("config", "consul", "consul-policies.hcl")
+	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8501" && export CONSUL_HTTP_TOKEN="%s" && export CONSUL_CLIENT_CERT=%s/secrets/consul/consul-agent-ca.pem && export CONSUL_CLIENT_KEY=%s/secrets/consul/consul-agent-ca-key.pem && export CONSUL_HTTP_SSL=true && export CONSUL_HTTP_SSL_VERIFY=false && `, host, token, baseDir, baseDir)
+	policyConsul := filepath.Join(baseDir, "consul", "consul-policies.hcl")
 	err = runCmd("", fmt.Sprintf(`%sconsul acl policy update -name consul-policies -rules @%s`, exports, policyConsul), os.Stdout)
 
 	return err
 }
 
-func BootstrapConsul(inventory string) (bool, error) {
-	secrets, err := getSecrets()
+func BootstrapConsul(inventory, baseDir string) (bool, error) {
+	secrets, err := getSecrets(baseDir)
 	if err != nil {
 		return false, err
 	}
@@ -86,7 +86,7 @@ func BootstrapConsul(inventory string) (bool, error) {
 		return false, err
 	}
 	if secrets.ConsulBootstrapToken != "TBD" {
-		err = regenerateConsulPolicies(inv, secrets)
+		err = regenerateConsulPolicies(inv, secrets, baseDir)
 		return false, err
 	}
 	hosts := getHosts(inv, "consul_servers")
@@ -94,10 +94,10 @@ func BootstrapConsul(inventory string) (bool, error) {
 		return false, fmt.Errorf("no consul servers found in inventory")
 	}
 	host := hosts[0]
-	secretsDir := filepath.Join("config", "secrets")
+	secretsDir := filepath.Join(baseDir, "secrets")
 
 	path := filepath.Join(secretsDir, "consul-bootstrap.token")
-	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8501" && export CONSUL_CLIENT_CERT=config/secrets/consul/consul-agent-ca.pem && export CONSUL_CLIENT_KEY=config/secrets/consul/consul-agent-ca-key.pem && export CONSUL_HTTP_SSL=true && export CONSUL_HTTP_SSL_VERIFY=false && `, host)
+	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8501" && export CONSUL_CLIENT_CERT=%s/secrets/consul/consul-agent-ca.pem && export CONSUL_CLIENT_KEY=%s/secrets/consul/consul-agent-ca-key.pem && export CONSUL_HTTP_SSL=true && export CONSUL_HTTP_SSL_VERIFY=false && `, host, baseDir, baseDir)
 
 	err = runCmd("", fmt.Sprintf(`%s consul acl bootstrap > %s`, exports, path), os.Stdout)
 	if err != nil {
@@ -108,24 +108,24 @@ func BootstrapConsul(inventory string) (bool, error) {
 		return false, err
 	}
 	secrets.ConsulBootstrapToken = token
-	exports = fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8501" && export CONSUL_HTTP_TOKEN="%s" && export CONSUL_CLIENT_CERT=config/secrets/consul/consul-agent-ca.pem && export CONSUL_CLIENT_KEY=config/secrets/consul/consul-agent-ca-key.pem && export CONSUL_HTTP_SSL=true && export CONSUL_HTTP_SSL_VERIFY=false && `, host, token)
-	policyConsul := filepath.Join("config", "consul", "consul-policies.hcl")
+	exports = fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8501" && export CONSUL_HTTP_TOKEN="%s" && export CONSUL_CLIENT_CERT=%s/secrets/consul/consul-agent-ca.pem && export CONSUL_CLIENT_KEY=%s/secrets/consul/consul-agent-ca-key.pem && export CONSUL_HTTP_SSL=true && export CONSUL_HTTP_SSL_VERIFY=false && `, host, token, baseDir, baseDir)
+	policyConsul := filepath.Join(baseDir, "consul", "consul-policies.hcl")
 	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name consul-policies -rules @%s`, exports, policyConsul), os.Stdout)
 	if err != nil {
 		return false, err
 	}
-	policyConsul = filepath.Join("config", "consul", "nomad-client-policy.hcl")
+	policyConsul = filepath.Join(baseDir, "consul", "nomad-client-policy.hcl")
 	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name nomad-client -rules @%s`, exports, policyConsul), os.Stdout)
 	if err != nil {
 		return false, err
 	}
-	policyConsul = filepath.Join("config", "consul", "nomad-server-policy.hcl")
+	policyConsul = filepath.Join(baseDir, "consul", "nomad-server-policy.hcl")
 	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name nomad-server -rules @%s`, exports, policyConsul), os.Stdout)
 	if err != nil {
 		return false, err
 	}
 
-	policyConsul = filepath.Join("config", "consul", "anonymous-policy.hcl")
+	policyConsul = filepath.Join(baseDir, "consul", "anonymous-policy.hcl")
 	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name anonymous-dns-read -rules @%s`, exports, policyConsul), os.Stdout)
 	if err != nil {
 		return false, err
@@ -175,7 +175,7 @@ func BootstrapConsul(inventory string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	err = os.WriteFile(filepath.Join("config", "secrets", "secrets.yml"), d, 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "secrets", "secrets.yml"), d, 0755)
 
 	return true, err
 }

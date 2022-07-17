@@ -89,4 +89,3 @@ output "servers" {
     for node in hcloud_server.cluster_node : "${node.ipv4_address} host_name=${node.name}"
   ]
 }
-# private_ip=10.0.0.2 host_name=nomad-cluster-nbg-1
