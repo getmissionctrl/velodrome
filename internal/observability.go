@@ -58,6 +58,9 @@ var tempoConsulService string
 //go:embed templates/loki/loki-http.hcl
 var lokiHttpService string
 
+//go:embed templates/grafana/grafana.hcl
+var grafanaHttpService string
+
 //go:embed templates/prometheus/prometheus.hcl
 var prometheusConsulService string
 
@@ -219,10 +222,17 @@ func mkObservabilityConfigs(inventory, baseDir, user string) error {
 			file:      filepath.Join(baseDir, "loki", "loki.hcl"),
 			name:      "loki",
 		},
+		{
+			template:  grafanaHttpService,
+			hostGroup: "grafana",
+			file:      filepath.Join(baseDir, "grafana", "grafana.hcl"),
+			name:      "grafana",
+		},
 	}
 
 	for _, service := range consulServices {
 		servers := getPrivateHosts(inv, service.hostGroup)
+		fmt.Println(servers)
 		template := strings.ReplaceAll(service.template, "HOST", servers[0])
 		err = os.WriteFile(filepath.Clean(service.file), []byte(template), 0755)
 		if err != nil {

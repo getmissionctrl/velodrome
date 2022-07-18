@@ -46,11 +46,13 @@ func registerIntention(inventory *aini.InventoryData, secrets *secretsConfig, ba
 }
 
 func getExports(inventory *aini.InventoryData, secrets *secretsConfig, baseDir string) (string, error) {
+
 	hosts := getHosts(inventory, "consul_servers")
 	if len(hosts) == 0 {
 		return "", fmt.Errorf("no consul servers found in inventory")
 	}
 	host := hosts[0]
+
 	token := secrets.ConsulBootstrapToken
 	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8501" && export CONSUL_HTTP_TOKEN="%s" && export CONSUL_CLIENT_CERT=%s/secrets/consul/consul-agent-ca.pem && export CONSUL_CLIENT_KEY=%s/secrets/consul/consul-agent-ca-key.pem && export CONSUL_HTTP_SSL=true && export CONSUL_HTTP_SSL_VERIFY=false && `, host, token, baseDir, baseDir)
 	return exports, nil
