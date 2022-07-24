@@ -127,6 +127,12 @@ func BootstrapConsul(inventory, baseDir string) (bool, error) {
 		return false, err
 	}
 
+	policyConsul = filepath.Join(baseDir, "consul", "prometheus-policy.hcl")
+	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name prometheus -rules @%s`, exports, policyConsul), os.Stdout)
+	if err != nil {
+		return false, err
+	}
+
 	policyConsul = filepath.Join(baseDir, "consul", "anonymous-policy.hcl")
 	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name anonymous-dns-read -rules @%s`, exports, policyConsul), os.Stdout)
 	if err != nil {
@@ -173,6 +179,18 @@ func BootstrapConsul(inventory, baseDir string) (bool, error) {
 	}
 
 	secrets.NomadServerConsulToken = clientToken
+
+	tokenPath = filepath.Join(secretsDir, "prometheus.token")
+	err = runCmd("", fmt.Sprintf(`%sconsul acl token create -description "prometheus token"  -policy-name prometheus > %s`, exports, tokenPath), os.Stdout)
+	if err != nil {
+		return false, err
+	}
+	clientToken, err = parseConsulToken(tokenPath)
+	if err != nil {
+		return false, err
+	}
+	secrets.PrometheusConsulToken = clientToken
+
 	d, err := yaml.Marshal(&secrets)
 	if err != nil {
 		return false, err

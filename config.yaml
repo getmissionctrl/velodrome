@@ -21,8 +21,9 @@ cloud_provider_config:
     ssh_keys:
     - wille.faler@gmail.com
     server_type: cx21
-    base_server_name: nomad-srv
-    firewall_name: dev_firewall
-    network_name: dev_network
+    resource_names:
+      base_server_name: nomad-srv
+      firewall_name: dev_firewall
+      network_name: dev_network
     allowed_ips:
     - 85.4.84.201/32

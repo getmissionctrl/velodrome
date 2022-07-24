@@ -38,6 +38,9 @@ var nomadClientPolicy string
 //go:embed templates/consul/nomad-server-policy.hcl
 var nomadServerPolicy string
 
+//go:embed templates/consul/prometheus-policy.hcl
+var prometheusPolicy string
+
 //go:embed templates/consul/consul-server-config.hcl
 var consulServer string
 
@@ -178,6 +181,10 @@ func makeConsulPolicies(inv *aini.InventoryData, baseDir string) error {
 		return err
 	}
 	err = os.WriteFile(filepath.Join(baseDir, "consul", "nomad-server-policy.hcl"), []byte(nomadServerPolicy), 0755)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(filepath.Join(baseDir, "consul", "prometheus-policy.hcl"), []byte(prometheusPolicy), 0755)
 	if err != nil {
 		return err
 	}

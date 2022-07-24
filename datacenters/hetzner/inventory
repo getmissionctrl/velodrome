@@ -1,21 +1,26 @@
 [consul_servers]
-159.69.29.243 private_ip=10.0.0.2 host_name=nomad-srv1
-116.203.60.253 private_ip=10.0.0.3 host_name=nomad-srv2
-159.69.30.93 private_ip=10.0.0.4 host_name=nomad-srv3
+195.201.217.37 private_ip=10.0.0.2 host_name=nomad-srv1
+116.203.33.216 private_ip=10.0.0.3 host_name=nomad-srv2
+195.201.223.238 private_ip=10.0.0.4 host_name=nomad-srv3
 [nomad_servers]
-159.69.29.243 private_ip=10.0.0.2 host_name=nomad-srv1
-116.203.60.253 private_ip=10.0.0.3 host_name=nomad-srv2
-159.69.30.93 private_ip=10.0.0.4 host_name=nomad-srv3
+195.201.217.37 private_ip=10.0.0.2 host_name=nomad-srv1
+116.203.33.216 private_ip=10.0.0.3 host_name=nomad-srv2
+195.201.223.238 private_ip=10.0.0.4 host_name=nomad-srv3
 [clients]
-157.90.225.83 private_ip=10.0.0.5 host_name=nomad-srv4
-159.69.18.81 private_ip=10.0.0.6 host_name=nomad-srv5
+195.201.218.207 private_ip=10.0.0.5 host_name=nomad-srv4
+195.201.222.106 private_ip=10.0.0.6 host_name=nomad-srv5
 ## Observability
 [grafana]
-159.69.30.244 private_ip=10.0.0.7 host_name=nomad-srv6
+195.201.220.57 private_ip=10.0.0.7 host_name=nomad-srv6
 [prometheus]
-159.69.30.244 private_ip=10.0.0.7 host_name=nomad-srv6
+195.201.220.57 private_ip=10.0.0.7 host_name=nomad-srv6
 [loki]
-159.69.30.244 private_ip=10.0.0.7 host_name=nomad-srv6
+195.201.220.57 private_ip=10.0.0.7 host_name=nomad-srv6
 [tempo]
-159.69.30.244 private_ip=10.0.0.7 host_name=nomad-srv6
+195.201.220.57 private_ip=10.0.0.7 host_name=nomad-srv6
 
+  ; "195.201.217.37 host_name=nomad-srv1",
+  ; "116.203.33.216 host_name=nomad-srv2",
+  ; "195.201.223.238 host_name=nomad-srv3",
+  ; "195.201.218.207 host_name=nomad-srv4",
+  ; "195.201.222.106 host_name=nomad-srv5",

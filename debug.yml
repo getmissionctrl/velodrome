@@ -1,0 +1,6 @@
+- hosts: prometheus 
+  become: yes
+  tasks:
+  - name: "Ansible | List all known variables and facts"
+    debug:
+      var: hostvars[inventory_hostname] #["groups"]

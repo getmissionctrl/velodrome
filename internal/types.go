@@ -33,6 +33,7 @@ type secretsConfig struct {
 	NomadServerConsulToken string `yaml:"NOMAD_SERVER_CONSUL_TOKEN"`
 	ConsulAgentToken       string `yaml:"CONSUL_AGENT_TOKEN"`
 	ConsulBootstrapToken   string `yaml:"CONSUL_BOOTSTRAP_TOKEN"`
+	PrometheusConsulToken  string `yaml:"PROMETHEUS_CONSUL_TOKEN"`
 	S3Endpoint             string `yaml:"s3_endpoint"`
 	S3AccessKey            string `yaml:"s3_access_key"`
 	S3SecretKey            string `yaml:"s3_secret_key"`

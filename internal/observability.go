@@ -182,7 +182,7 @@ func mkObservabilityConfigs(inventory, baseDir, user string) error {
 	err = tmpl.Execute(&buf, map[string]interface{}{
 		"ConsulHosts": append(clients, consulServers...),
 		"NomadHosts":  append(clients, nomadServers...),
-		"ConsulToken": "{{CONSUL_BOOTSTRAP_TOKEN}}",
+		"ConsulToken": "{{PROMETHEUS_CONSUL_TOKEN}}",
 	})
 	if err != nil {
 		return err

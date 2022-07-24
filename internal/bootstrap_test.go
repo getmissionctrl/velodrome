@@ -12,6 +12,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func init() {
+	if os.Getenv("S3_ENDPOINT") == "" {
+		os.Setenv("S3_ENDPOINT", "aws.s3.amazon.com")
+		os.Setenv("S3_SECRET_KEY", "aws.s3.amazon.com")
+		os.Setenv("S3_ACCESS_KEY", "aws.s3.amazon.com")
+	}
+}
+
 func TestMakeConsulPoliciesAndHashiConfigs(t *testing.T) {
 	inv, err := readInventory(filepath.Join("testdata", "inventory"))
 	assert.NoError(t, err)
