@@ -102,76 +102,33 @@ func Observability(inventory, configFile, baseDir, user string) error {
 }
 
 func mkObservabilityConfigs(consul Consul, inv *aini.InventoryData, baseDir, user string) error {
-	err := os.MkdirAll(filepath.Join(baseDir, "prometheus"), 0755)
-	if err != nil {
-		return err
+	dirs := []string{
+		"prometheus", "loki", "grafana", "intentions", "tempo",
 	}
-	err = os.MkdirAll(filepath.Join(baseDir, "loki"), 0755)
-	if err != nil {
-		return err
+	for _, dir := range dirs {
+		err := os.MkdirAll(filepath.Join(baseDir, dir), 0755)
+		if err != nil {
+			return err
+		}
 	}
-	err = os.MkdirAll(filepath.Join(baseDir, "grafana"), 0755)
-	if err != nil {
-		return err
+	toWrite := map[string]string{
+		filepath.Join(baseDir, "prometheus", "prometheus.service"):    prometheusService,
+		filepath.Join(baseDir, "prometheus", "install-prometheus.sh"): prometheusInstall,
+		filepath.Join(baseDir, "observability.yml"):                   observabilityAnsible,
+		filepath.Join(baseDir, "loki", "setup-loki-agent.sh"):         lokiDockerAgent,
+		filepath.Join(baseDir, "loki", "loki.service"):                lokiService,
+		filepath.Join(baseDir, "loki", "promtail.service"):            promtailService,
+		filepath.Join(baseDir, "loki", "loki-config.yml"):             lokiConfig,
+		filepath.Join(baseDir, "tempo", "tempo.yml"):                  tempoConfig,
+		filepath.Join(baseDir, "tempo", "tempo.service"):              tempoService,
+		filepath.Join(baseDir, "tempo", "setup-tempo.sh"):             tempoInstall,
+		filepath.Join(baseDir, "loki", "promtail.yml"):                promtailConf,
 	}
-	err = os.MkdirAll(filepath.Join(baseDir, "intentions"), 0755)
-	if err != nil {
-		return err
-	}
-
-	err = os.MkdirAll(filepath.Join(baseDir, "tempo"), 0755)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(filepath.Join(baseDir, "prometheus", "prometheus.service"), []byte(prometheusService), 0755)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(filepath.Join(baseDir, "prometheus", "install-prometheus.sh"), []byte(prometheusInstall), 0755)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(filepath.Join(baseDir, "observability.yml"), []byte(observabilityAnsible), 0755)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(filepath.Join(baseDir, "loki", "setup-loki-agent.sh"), []byte(lokiDockerAgent), 0755)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(filepath.Join(baseDir, "loki", "loki.service"), []byte(lokiService), 0755)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(filepath.Join(baseDir, "loki", "promtail.service"), []byte(promtailService), 0755)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(filepath.Join(baseDir, "loki", "loki-config.yml"), []byte(lokiConfig), 0755)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(filepath.Join(baseDir, "tempo", "tempo.yml"), []byte(tempoConfig), 0755)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(filepath.Join(baseDir, "tempo", "tempo.service"), []byte(tempoService), 0755)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(filepath.Join(baseDir, "tempo", "setup-tempo.sh"), []byte(tempoInstall), 0755)
-	if err != nil {
-		return err
+	for k, v := range toWrite {
+		err := os.WriteFile(k, []byte(v), 0755)
+		if err != nil {
+			return err
+		}
 	}
 
 	clients := getPrivateHosts(inv, "clients")
@@ -184,16 +141,11 @@ func mkObservabilityConfigs(consul Consul, inv *aini.InventoryData, baseDir, use
 	}
 	var buf bytes.Buffer
 
-	err = tmpl.Execute(&buf, map[string]interface{}{
+	err := tmpl.Execute(&buf, map[string]interface{}{
 		"ConsulHosts": append(clients, consulServers...),
 		"NomadHosts":  append(clients, nomadServers...),
 		"ConsulToken": "{{PROMETHEUS_CONSUL_TOKEN}}",
 	})
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(filepath.Join(baseDir, "loki", "promtail.yml"), []byte(promtailConf), 0755)
 	if err != nil {
 		return err
 	}
