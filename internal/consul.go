@@ -29,167 +29,74 @@ func parseConsulToken(file string) (string, error) {
 	return "", nil
 }
 
-func registerConsul(inventory *aini.InventoryData, secrets *secretsConfig, baseDir, file string) error {
-	exports, err := getExports(inventory, secrets, baseDir)
-	if err != nil {
-		return err
-	}
-	return runCmd("", fmt.Sprintf(`%sconsul services register %s`, exports, file), os.Stdout)
-}
-
-func registerIntention(inventory *aini.InventoryData, secrets *secretsConfig, baseDir, file string) error {
-	exports, err := getExports(inventory, secrets, baseDir)
-	if err != nil {
-		return err
-	}
-	return runCmd("", fmt.Sprintf(`%sconsul config write %s`, exports, file), os.Stdout)
-}
-
-func getExports(inventory *aini.InventoryData, secrets *secretsConfig, baseDir string) (string, error) {
-
-	hosts := getHosts(inventory, "consul_servers")
-	if len(hosts) == 0 {
-		return "", fmt.Errorf("no consul servers found in inventory")
-	}
-	host := hosts[0]
-
-	token := secrets.ConsulBootstrapToken
-	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8501" && export CONSUL_HTTP_TOKEN="%s" && export CONSUL_CLIENT_CERT=%s/secrets/consul/consul-agent-ca.pem && export CONSUL_CLIENT_KEY=%s/secrets/consul/consul-agent-ca-key.pem && export CONSUL_HTTP_SSL=true && export CONSUL_HTTP_SSL_VERIFY=false && `, host, token, baseDir, baseDir)
-	return exports, nil
-}
-
-func regenerateConsulPolicies(inventory *aini.InventoryData, secrets *secretsConfig, baseDir string) error {
-	token := secrets.ConsulBootstrapToken
-	hosts := getHosts(inventory, "consul_servers")
-	if len(hosts) == 0 {
-		return fmt.Errorf("no consul servers found in inventory")
-	}
-	host := hosts[0]
-
+func regenerateConsulPolicies(consul Consul, inventory *aini.InventoryData, secrets *secretsConfig, baseDir string) error {
 	err := makeConsulPolicies(inventory, baseDir)
 	if err != nil {
 		return err
 	}
 	fmt.Println("Updating consul policies")
-	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8501" && export CONSUL_HTTP_TOKEN="%s" && export CONSUL_CLIENT_CERT=%s/secrets/consul/consul-agent-ca.pem && export CONSUL_CLIENT_KEY=%s/secrets/consul/consul-agent-ca-key.pem && export CONSUL_HTTP_SSL=true && export CONSUL_HTTP_SSL_VERIFY=false && `, host, token, baseDir, baseDir)
 	policyConsul := filepath.Join(baseDir, "consul", "consul-policies.hcl")
-	err = runCmd("", fmt.Sprintf(`%sconsul acl policy update -name consul-policies -rules @%s`, exports, policyConsul), os.Stdout)
 
-	return err
+	return consul.UpdatePolicy("consul-policies", policyConsul)
 }
 
-func BootstrapConsul(inventory, baseDir string) (bool, error) {
+func BootstrapConsul(consul Consul, inventory *aini.InventoryData, baseDir string) (bool, error) {
 	secrets, err := getSecrets(baseDir)
 	if err != nil {
 		return false, err
 	}
-	inv, err := readInventory(inventory)
-	if err != nil {
-		return false, err
-	}
+
 	if secrets.ConsulBootstrapToken != "TBD" {
-		err = regenerateConsulPolicies(inv, secrets, baseDir)
+		err = regenerateConsulPolicies(consul, inventory, secrets, baseDir)
 		return false, err
 	}
-	hosts := getHosts(inv, "consul_servers")
-	if len(hosts) == 0 {
-		return false, fmt.Errorf("no consul servers found in inventory")
+	token, err := consul.Bootstrap()
+	if secrets.ConsulBootstrapToken != "TBD" {
+		return false, err
 	}
-	host := hosts[0]
-	secretsDir := filepath.Join(baseDir, "secrets")
 
-	path := filepath.Join(secretsDir, "consul-bootstrap.token")
-	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8501" && export CONSUL_CLIENT_CERT=%s/secrets/consul/consul-agent-ca.pem && export CONSUL_CLIENT_KEY=%s/secrets/consul/consul-agent-ca-key.pem && export CONSUL_HTTP_SSL=true && export CONSUL_HTTP_SSL_VERIFY=false && `, host, baseDir, baseDir)
-
-	err = runCmd("", fmt.Sprintf(`%s consul acl bootstrap > %s`, exports, path), os.Stdout)
-	if err != nil {
-		return false, err
-	}
-	token, err := parseConsulToken(path)
-	if err != nil {
-		return false, err
-	}
 	secrets.ConsulBootstrapToken = token
-	exports = fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8501" && export CONSUL_HTTP_TOKEN="%s" && export CONSUL_CLIENT_CERT=%s/secrets/consul/consul-agent-ca.pem && export CONSUL_CLIENT_KEY=%s/secrets/consul/consul-agent-ca-key.pem && export CONSUL_HTTP_SSL=true && export CONSUL_HTTP_SSL_VERIFY=false && `, host, token, baseDir, baseDir)
-	policyConsul := filepath.Join(baseDir, "consul", "consul-policies.hcl")
-	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name consul-policies -rules @%s`, exports, policyConsul), os.Stdout)
-	if err != nil {
-		return false, err
+
+	policies := map[string]string{
+		"consul-policies":    filepath.Join(baseDir, "consul", "consul-policies.hcl"),
+		"nomad-client":       filepath.Join(baseDir, "consul", "nomad-client-policy.hcl"),
+		"nomad-server":       filepath.Join(baseDir, "consul", "nomad-server-policy.hcl"),
+		"prometheus":         filepath.Join(baseDir, "consul", "prometheus-policy.hcl"),
+		"anonymous-dns-read": filepath.Join(baseDir, "consul", "anonymous-policy.hcl"),
 	}
-	policyConsul = filepath.Join(baseDir, "consul", "nomad-client-policy.hcl")
-	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name nomad-client -rules @%s`, exports, policyConsul), os.Stdout)
-	if err != nil {
-		return false, err
+
+	for k, v := range policies {
+		err = consul.RegisterPolicy(k, v)
+		if err != nil {
+			return false, err
+		}
 	}
-	policyConsul = filepath.Join(baseDir, "consul", "nomad-server-policy.hcl")
-	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name nomad-server -rules @%s`, exports, policyConsul), os.Stdout)
+
+	err = consul.UpdateACL("anonymous", "anonymous-dns-read")
 	if err != nil {
 		return false, err
 	}
 
-	policyConsul = filepath.Join(baseDir, "consul", "prometheus-policy.hcl")
-	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name prometheus -rules @%s`, exports, policyConsul), os.Stdout)
-	if err != nil {
-		return false, err
+	acls := map[string]string{
+		"agent token":        "consul-policies",
+		"client token":       "nomad-client",
+		"nomad server token": "nomad-server",
+		"prometheus token":   "prometheus",
+	}
+	tokens := map[string]string{}
+
+	for k, v := range acls {
+		clientToken, err := consul.RegisterACL(k, v)
+		if err != nil {
+			return false, err
+		}
+		tokens[v] = clientToken
 	}
 
-	policyConsul = filepath.Join(baseDir, "consul", "anonymous-policy.hcl")
-	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name anonymous-dns-read -rules @%s`, exports, policyConsul), os.Stdout)
-	if err != nil {
-		return false, err
-	}
-
-	err = runCmd("", fmt.Sprintf(`%sconsul acl token update -id anonymous -policy-name=anonymous-dns-read`, exports), os.Stdout)
-	if err != nil {
-		return false, err
-	}
-
-	tokenPath := filepath.Join(secretsDir, "consul-client.token")
-	err = runCmd("", fmt.Sprintf(`%sconsul acl token create -description "agent token"  -policy-name consul-policies > %s`, exports, tokenPath), os.Stdout)
-	if err != nil {
-		return false, err
-	}
-	clientToken, err := parseConsulToken(tokenPath)
-	if err != nil {
-		return false, err
-	}
-
-	secrets.ConsulAgentToken = clientToken
-
-	tokenPath = filepath.Join(secretsDir, "nomad-client.token")
-	err = runCmd("", fmt.Sprintf(`%sconsul acl token create -description "nomad client token"  -policy-name nomad-client > %s`, exports, tokenPath), os.Stdout)
-	if err != nil {
-		return false, err
-	}
-	clientToken, err = parseConsulToken(tokenPath)
-	if err != nil {
-		return false, err
-	}
-
-	secrets.NomadClientConsulToken = clientToken
-
-	tokenPath = filepath.Join(secretsDir, "nomad-server.token")
-	err = runCmd("", fmt.Sprintf(`%sconsul acl token create -description "nomad server token"  -policy-name nomad-server > %s`, exports, tokenPath), os.Stdout)
-	if err != nil {
-		return false, err
-	}
-	clientToken, err = parseConsulToken(tokenPath)
-	if err != nil {
-		return false, err
-	}
-
-	secrets.NomadServerConsulToken = clientToken
-
-	tokenPath = filepath.Join(secretsDir, "prometheus.token")
-	err = runCmd("", fmt.Sprintf(`%sconsul acl token create -description "prometheus token"  -policy-name prometheus > %s`, exports, tokenPath), os.Stdout)
-	if err != nil {
-		return false, err
-	}
-	clientToken, err = parseConsulToken(tokenPath)
-	if err != nil {
-		return false, err
-	}
-	secrets.PrometheusConsulToken = clientToken
+	secrets.ConsulAgentToken = tokens["consul-policies"]
+	secrets.NomadClientConsulToken = tokens["nomad-client"]
+	secrets.NomadServerConsulToken = tokens["nomad-server"]
+	secrets.PrometheusConsulToken = tokens["prometheus"]
 
 	d, err := yaml.Marshal(&secrets)
 	if err != nil {

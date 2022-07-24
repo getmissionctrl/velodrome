@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/relex/aini"
 )
 
 //go:embed templates/consul/intention.hcl
@@ -72,14 +74,24 @@ type consulServiceConf struct {
 }
 
 func Observability(inventory, configFile, baseDir, user string) error {
+	inv, err := readInventory(inventory)
+	if err != nil {
+		return err
+	}
 
-	err := mkObservabilityConfigs(inventory, baseDir, user)
+	secrets := filepath.Join(baseDir, "secrets", "secrets.yml")
+	sec, err := getSecrets(baseDir)
+	if err != nil {
+		return err
+	}
+	consul := NewConsul(inv, sec, baseDir)
+
+	err = mkObservabilityConfigs(consul, inv, baseDir, user)
 	if err != nil {
 		return err
 	}
 
 	setup := filepath.Join(baseDir, "observability.yml")
-	secrets := filepath.Join(baseDir, "secrets", "secrets.yml")
 
 	err = runCmd("", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s -e @%s", setup, inventory, user, secrets, configFile), os.Stdout)
 	if err != nil {
@@ -89,7 +101,7 @@ func Observability(inventory, configFile, baseDir, user string) error {
 	return nil
 }
 
-func mkObservabilityConfigs(inventory, baseDir, user string) error {
+func mkObservabilityConfigs(consul Consul, inv *aini.InventoryData, baseDir, user string) error {
 	err := os.MkdirAll(filepath.Join(baseDir, "prometheus"), 0755)
 	if err != nil {
 		return err
@@ -162,10 +174,6 @@ func mkObservabilityConfigs(inventory, baseDir, user string) error {
 		return err
 	}
 
-	inv, err := readInventory(inventory)
-	if err != nil {
-		return err
-	}
 	clients := getPrivateHosts(inv, "clients")
 	consulServers := getPrivateHosts(inv, "consul_servers")
 	nomadServers := getPrivateHosts(inv, "nomad_servers")
@@ -175,10 +183,7 @@ func mkObservabilityConfigs(inventory, baseDir, user string) error {
 		return e
 	}
 	var buf bytes.Buffer
-	secrets, err := getSecrets(baseDir)
-	if err != nil {
-		return err
-	}
+
 	err = tmpl.Execute(&buf, map[string]interface{}{
 		"ConsulHosts": append(clients, consulServers...),
 		"NomadHosts":  append(clients, nomadServers...),
@@ -196,6 +201,9 @@ func mkObservabilityConfigs(inventory, baseDir, user string) error {
 	output := buf.Bytes()
 
 	err = os.WriteFile(filepath.Join(baseDir, "prometheus", "prometheus.yml"), []byte(output), 0755)
+	if err != nil {
+		return err
+	}
 
 	consulServices := []consulServiceConf{
 		{
@@ -245,12 +253,12 @@ func mkObservabilityConfigs(inventory, baseDir, user string) error {
 			return err
 		}
 
-		err = registerConsul(inv, secrets, baseDir, service.file)
+		err = consul.RegisterService(service.file)
 		if err != nil {
 			return err
 		}
 
-		err = registerIntention(inv, secrets, baseDir, intentionFile)
+		err = consul.RegisterIntention(intentionFile)
 		if err != nil {
 			return err
 		}

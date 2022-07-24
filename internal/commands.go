@@ -43,7 +43,16 @@ func Bootstrap(config *Config, configPath string) error {
 	if err != nil {
 		return err
 	}
-	hasBootstrapped, err := BootstrapConsul(inventory, baseDir)
+	inv, err := readInventory(inventory)
+	if err != nil {
+		return err
+	}
+	sec, err := getSecrets(baseDir)
+	if err != nil {
+		return err
+	}
+	consul := NewConsul(inv, sec, baseDir)
+	hasBootstrapped, err := BootstrapConsul(consul, inv, baseDir)
 	if hasBootstrapped {
 		fmt.Println("Bootstrapped Consul ACL, re-running Ansible...")
 		cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s  -e @%s", setup, inventory, user, secrets, configPath))

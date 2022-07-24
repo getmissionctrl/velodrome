@@ -168,32 +168,21 @@ func makeConsulPolicies(inv *aini.InventoryData, baseDir string) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(filepath.Join(baseDir, "consul", "nomad-client-policy.hcl"), []byte(nomadClientPolicy), 0755)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(filepath.Join(baseDir, "consul", "install-exporter.sh"), []byte(installExporter), 0755)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(filepath.Join(baseDir, "consul", "consul-exporter.service"), []byte(consulExporterService), 0755)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(filepath.Join(baseDir, "consul", "nomad-server-policy.hcl"), []byte(nomadServerPolicy), 0755)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(filepath.Join(baseDir, "consul", "prometheus-policy.hcl"), []byte(prometheusPolicy), 0755)
-	if err != nil {
-		return err
-	}
 
-	err = os.WriteFile(filepath.Join(baseDir, "consul", "anonymous-policy.hcl"), []byte(anonymousDns), 0755)
-	if err != nil {
-		return err
+	toCopy := map[string]string{
+		filepath.Join(baseDir, "consul", "nomad-client-policy.hcl"): nomadClientPolicy,
+		filepath.Join(baseDir, "consul", "install-exporter.sh"):     installExporter,
+		filepath.Join(baseDir, "consul", "consul-exporter.service"): consulExporterService,
+		filepath.Join(baseDir, "consul", "nomad-server-policy.hcl"): nomadServerPolicy,
+		filepath.Join(baseDir, "consul", "prometheus-policy.hcl"):   prometheusPolicy,
+		filepath.Join(baseDir, "consul", "anonymous-policy.hcl"):    anonymousDns,
 	}
-
+	for k, v := range toCopy {
+		err = os.WriteFile(k, []byte(v), 0755)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -272,26 +261,19 @@ func makeConfigs(inv *aini.InventoryData, baseDir, dcName string) error {
 	nomadServer = strings.ReplaceAll(nomadServer, "dc1", dcName)
 	nomadClient = strings.ReplaceAll(nomadClient, "dc1", dcName)
 
-	err = os.WriteFile(filepath.Join(baseDir, "nomad", "server.j2"), []byte(nomadServer), 0755)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(filepath.Join(baseDir, "nomad", "client.j2"), []byte(nomadClient), 0755)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(filepath.Join(baseDir, "nomad", "nomad-server.service"), []byte(nomadServerService), 0755)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(filepath.Join(baseDir, "nomad", "nomad-client.service"), []byte(nomadClientService), 0755)
-	if err != nil {
-		return err
+	toWrite := map[string]string{
+		filepath.Join(baseDir, "nomad", "server.j2"):            nomadServer,
+		filepath.Join(baseDir, "nomad", "client.j2"):            nomadClient,
+		filepath.Join(baseDir, "nomad", "nomad-server.service"): nomadServerService,
+		filepath.Join(baseDir, "nomad", "nomad-client.service"): nomadClientService,
+		filepath.Join(baseDir, "consul", "consul.service"):      consulService,
 	}
 
-	err = os.WriteFile(filepath.Join(baseDir, "consul", "consul.service"), []byte(consulService), 0755)
-	if err != nil {
-		return err
+	for k, v := range toWrite {
+		err = os.WriteFile(k, []byte(v), 0755)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -306,7 +288,10 @@ func Secrets(inv *aini.InventoryData, baseDir, dcName string) error {
 	consulSecretDir := filepath.Join(baseDir, "secrets", "consul")
 	nomadSecretDir := filepath.Join(baseDir, "secrets", "nomad")
 	err = os.MkdirAll(consulSecretDir, 0755)
-	consulGossipKey := strings.ReplaceAll(string(out.Bytes()), "\n", "")
+	if err != nil {
+		return err
+	}
+	consulGossipKey := strings.ReplaceAll(out.String(), "\n", "")
 
 	var out2 bytes.Buffer
 	err = runCmd("", "nomad operator keygen", &out2)
@@ -314,7 +299,7 @@ func Secrets(inv *aini.InventoryData, baseDir, dcName string) error {
 	if err != nil {
 		return err
 	}
-	nomadGossipKey := strings.ReplaceAll(string(out2.Bytes()), "\n", "")
+	nomadGossipKey := strings.ReplaceAll(out2.String(), "\n", "")
 	if os.Getenv("S3_ENDPOINT") == "" || os.Getenv("S3_SECRET_KEY") == "" || os.Getenv("S3_ACCESS_KEY") == "" {
 		return fmt.Errorf("s3 compatible env variables missing for storing state: please set S3_ENDPOINT, S3_SECRET_KEY & S3_ACCESS_KEY")
 	}
