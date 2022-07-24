@@ -77,8 +77,7 @@ func (client *consulBinary) RegisterPolicy(name, file string) error {
 	if err != nil {
 		return err
 	}
-	err = runCmd("", fmt.Sprintf(`%sconsul acl policy create -name %s -rules @%s`, exports, name, file), os.Stdout)
-	return nil
+	return runCmd("", fmt.Sprintf(`%sconsul acl policy create -name %s -rules @%s`, exports, name, file), os.Stdout)
 }
 
 func (client *consulBinary) UpdatePolicy(name, file string) error {
@@ -86,8 +85,7 @@ func (client *consulBinary) UpdatePolicy(name, file string) error {
 	if err != nil {
 		return err
 	}
-	err = runCmd("", fmt.Sprintf(`%sconsul acl policy update -name %s -rules @%s`, exports, name, file), os.Stdout)
-	return nil
+	return runCmd("", fmt.Sprintf(`%sconsul acl policy update -name %s -rules @%s`, exports, name, file), os.Stdout)
 }
 
 func (client *consulBinary) RegisterIntention(file string) error {
