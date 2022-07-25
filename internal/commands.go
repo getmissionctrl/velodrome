@@ -66,9 +66,7 @@ func Bootstrap(config *Config, configPath string) error {
 		}
 	}
 
-	if config.ObservabilityConfig != nil {
-		Observability(inventory, configPath, baseDir, user)
-	}
+	Observability(inventory, configPath, baseDir, user)
 
 	return err
 }

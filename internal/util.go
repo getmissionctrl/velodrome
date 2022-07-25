@@ -14,6 +14,7 @@ func HasDependencies() bool {
 	dependencies := []string{
 		"consul",
 		"nomad",
+		"vault",
 		"ansible-playbook",
 		"cfssl",
 	}
@@ -24,11 +25,10 @@ func HasDependencies() bool {
 		}
 	}
 	if len(missing) > 0 {
-		fmt.Println("Dependencies unsatisfied, please install the following applications with your package manager of choice and ensure they are on the PATH:")
+		fmt.Println("Local dependencies unsatisfied.\n Please install the following applications with your package manager of choice and ensure they are on the PATH:")
 	}
 	for _, v := range missing {
 		fmt.Printf("- %s\n", v)
 	}
 	return len(missing) == 0
-
 }

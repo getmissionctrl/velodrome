@@ -8,22 +8,45 @@ import (
 )
 
 type Config struct {
-	DC                  string               `yaml:"dc_name"`
-	Inventory           string               `yaml:"inventory"`
-	BaseDir             string               `yaml:"baseDir"`
-	CloudProviderConfig CloudProvider        `yaml:"cloud_provider_config"`
-	ObservabilityConfig *ObservabilityConfig `yaml:"observability_config"`
+	DC                  string              `yaml:"dc_name"`
+	Inventory           string              `yaml:"inventory"`
+	BaseDir             string              `yaml:"baseDir"`
+	CloudProviderConfig CloudProvider       `yaml:"cloud_provider_config"`
+	ClusterConfig       ClusterConfig       `yaml:"cluster_config"`
+	ObservabilityConfig ObservabilityConfig `yaml:"observability_config"`
+}
+
+type ClusterConfig struct {
+	Servers               int  `yaml:"servers"`
+	Clients               int  `yaml:"clients"`
+	SeparateConsulServers bool `yaml:"separate_consul_servers"`
 }
 
 type CloudProvider struct {
-	User             string `yaml:"sudo_user"`
-	NetworkInterface string `yaml:"internal_network_interface_name"`
+	User             string                 `yaml:"sudo_user"`
+	NetworkInterface string                 `yaml:"internal_network_interface_name"`
+	Provider         string                 `yaml:"provider"`
+	ProviderSettings map[string]interface{} `yaml:"provider_settings"`
 }
 
 type ObservabilityConfig struct {
 	TempoBucket    string `yaml:"tempo_bucket"`
 	LokiBucket     string `yaml:"loki_bucket"`
 	SingleInstance bool   `yaml:"single_instance"`
+}
+
+type HetznerResourceNames struct {
+	BaseServerName string `yaml:"base_server_name"`
+	FirewallName   string `yaml:"firewall_name"`
+	NetworkName    string `yaml:"network_name"`
+}
+
+type HetznerSettings struct {
+	Location      string               `yaml:"location"`
+	SSHKeys       []string             `yaml:"ssh_keys"`
+	AllowedIPs    []string             `yaml:"allowed_ips"`
+	ServerType    string               `yaml:"server_type"`
+	ResourceNames HetznerResourceNames `yaml:"resource_names"`
 }
 
 type secretsConfig struct {
@@ -39,6 +62,11 @@ type secretsConfig struct {
 	S3SecretKey            string `yaml:"s3_secret_key"`
 }
 
+type TFVarsConfig struct {
+	ClusterConfig  ClusterConfig
+	ProviderConfig interface{}
+}
+
 func LoadConfig(file string) (*Config, error) {
 	bytes, err := ioutil.ReadFile(filepath.Clean(file))
 	if err != nil {
@@ -50,4 +78,26 @@ func LoadConfig(file string) (*Config, error) {
 		return nil, err
 	}
 	return &config, nil
+}
+
+func LoadTFVarsConfig(config Config) (*TFVarsConfig, error) {
+	var providerConfig interface{}
+	if config.CloudProviderConfig.Provider == "hetzner" {
+		var hetznerConfig HetznerSettings
+		bytes, err := yaml.Marshal(config.CloudProviderConfig.ProviderSettings)
+		if err != nil {
+			return nil, err
+		}
+
+		err = yaml.Unmarshal(bytes, &hetznerConfig)
+		if err != nil {
+			return nil, err
+		}
+		providerConfig = hetznerConfig
+	}
+
+	return &TFVarsConfig{
+		ClusterConfig:  config.ClusterConfig,
+		ProviderConfig: providerConfig,
+	}, nil
 }
