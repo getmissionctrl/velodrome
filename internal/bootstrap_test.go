@@ -21,17 +21,16 @@ func init() {
 }
 
 func TestMakeConsulPoliciesAndHashiConfigs(t *testing.T) {
+	folder := RandString(8)
+	defer func() {
+		os.RemoveAll(filepath.Join(folder))
+	}()
 	inv, err := readInventory(filepath.Join("testdata", "inventory"))
 	assert.NoError(t, err)
-	err = makeConsulPolicies(inv, "config")
+	err = makeConsulPolicies(inv, folder)
 	assert.NoError(t, err)
 
-	defer func() {
-		os.RemoveAll(filepath.Join("config", "consul"))
-		os.RemoveAll(filepath.Join("config", "nomad"))
-	}()
-
-	bytes, err := ioutil.ReadFile(filepath.Join("config", "consul", "consul-policies.hcl"))
+	bytes, err := ioutil.ReadFile(filepath.Join(folder, "consul", "consul-policies.hcl"))
 	assert.NoError(t, err)
 
 	contents := string(bytes)
@@ -40,29 +39,29 @@ func TestMakeConsulPoliciesAndHashiConfigs(t *testing.T) {
 
 	assert.Equal(t, 5, strings.Count(contents, "node"))
 
-	_, err = ioutil.ReadFile(filepath.Join("config", "consul", "nomad-server-policy.hcl"))
+	_, err = ioutil.ReadFile(filepath.Join(folder, "consul", "nomad-server-policy.hcl"))
 	assert.NoError(t, err)
 
-	_, err = ioutil.ReadFile(filepath.Join("config", "consul", "nomad-client-policy.hcl"))
+	_, err = ioutil.ReadFile(filepath.Join(folder, "consul", "nomad-client-policy.hcl"))
 	assert.NoError(t, err)
 
 	inv, err = readInventory(filepath.Join("testdata", "inventory"))
 	assert.NoError(t, err)
-	makeConfigs(inv, "config", "hetzner")
+	makeConfigs(inv, folder, "hetzner")
 
-	serverBytes, err := ioutil.ReadFile(filepath.Join("config", "consul", "server.j2"))
+	serverBytes, err := ioutil.ReadFile(filepath.Join(folder, "consul", "server.j2"))
 	assert.NoError(t, err)
 	serverConf := string(serverBytes)
 
-	clientBytes, err := ioutil.ReadFile(filepath.Join("config", "consul", "client.j2"))
+	clientBytes, err := ioutil.ReadFile(filepath.Join(folder, "consul", "client.j2"))
 	assert.NoError(t, err)
 	clientConf := string(clientBytes)
 
-	assertFileExists(t, filepath.Join("config", "nomad", "client.j2"))
-	assertFileExists(t, filepath.Join("config", "nomad", "server.j2"))
-	assertFileExists(t, filepath.Join("config", "nomad", "nomad-server.service"))
+	assertFileExists(t, filepath.Join(folder, "nomad", "client.j2"))
+	assertFileExists(t, filepath.Join(folder, "nomad", "server.j2"))
+	assertFileExists(t, filepath.Join(folder, "nomad", "nomad-server.service"))
 
-	assertFileExists(t, filepath.Join("config", "nomad", "nomad-client.service"))
+	assertFileExists(t, filepath.Join(folder, "nomad", "nomad-client.service"))
 
 	assert.Contains(t, clientConf, `datacenter = "hetzner"`)
 	assert.Contains(t, serverConf, `datacenter = "hetzner"`)
@@ -77,18 +76,19 @@ func TestMakeConsulPoliciesAndHashiConfigs(t *testing.T) {
 }
 
 func TestMakeSecrets(t *testing.T) {
+	folder := RandString(8)
 	defer func() {
-		os.RemoveAll(filepath.Join("config", "secrets"))
+		os.RemoveAll(folder)
 	}()
 	inv, err := readInventory(filepath.Join("testdata", "inventory"))
 	assert.NoError(t, err)
-	err = Secrets(inv, "config", "dc1")
+	err = Secrets(inv, folder, "dc1")
 	assert.NoError(t, err)
-	bytes, err := ioutil.ReadFile(filepath.Join("config", "secrets", "secrets.yml"))
+	bytes, err := ioutil.ReadFile(filepath.Join(folder, "secrets", "secrets.yml"))
 	assert.NoError(t, err)
-	err = Secrets(inv, "config", "dc1")
+	err = Secrets(inv, folder, "dc1")
 	assert.NoError(t, err)
-	bytes2, err := ioutil.ReadFile(filepath.Join("config", "secrets", "secrets.yml"))
+	bytes2, err := ioutil.ReadFile(filepath.Join(folder, "secrets", "secrets.yml"))
 	assert.NoError(t, err)
 	conf := string(bytes)
 
@@ -108,17 +108,17 @@ func TestMakeSecrets(t *testing.T) {
 
 	assert.NotEmpty(t, theMap["NOMAD_GOSSIP_KEY"])
 
-	_, err = ioutil.ReadFile(filepath.Join("config", "secrets", "consul", "consul-agent-ca-key.pem"))
+	_, err = ioutil.ReadFile(filepath.Join(folder, "secrets", "consul", "consul-agent-ca-key.pem"))
 	assert.NoError(t, err)
 
-	_, err = ioutil.ReadFile(filepath.Join("config", "secrets", "consul", "consul-agent-ca.pem"))
+	_, err = ioutil.ReadFile(filepath.Join(folder, "secrets", "consul", "consul-agent-ca.pem"))
 	assert.NoError(t, err)
-	_, err = ioutil.ReadFile(filepath.Join("config", "secrets", "consul", "dc1-server-consul-0-key.pem"))
+	_, err = ioutil.ReadFile(filepath.Join(folder, "secrets", "consul", "dc1-server-consul-0-key.pem"))
 	assert.NoError(t, err)
-	_, err = ioutil.ReadFile(filepath.Join("config", "secrets", "consul", "dc1-server-consul-0.pem"))
+	_, err = ioutil.ReadFile(filepath.Join(folder, "secrets", "consul", "dc1-server-consul-0.pem"))
 	assert.NoError(t, err)
 
-	nomadDir := filepath.Join("config", "secrets", "nomad")
+	nomadDir := filepath.Join(folder, "secrets", "nomad")
 	files := []string{
 		"cfssl.json",
 		"nomad-ca.csr",
@@ -139,7 +139,7 @@ func TestMakeSecrets(t *testing.T) {
 		assertFileExists(t, filepath.Join(nomadDir, path))
 	}
 
-	secrets, err := getSecrets("config")
+	secrets, err := getSecrets(folder)
 	assert.NoError(t, err)
 	assert.Equal(t, "TBD", secrets.ConsulBootstrapToken)
 	assert.Equal(t, "TBD", secrets.ConsulAgentToken)

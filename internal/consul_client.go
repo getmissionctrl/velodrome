@@ -52,12 +52,10 @@ func (client *consulBinary) Bootstrap() (string, error) {
 }
 
 func (client *consulBinary) RegisterACL(description, policy string) (string, error) {
-	exports, err := client.getExports()
-	if err != nil {
-		return "", err
-	}
 	tokenPath := filepath.Join(client.baseDir, "secrets", fmt.Sprintf("%s.token", policy))
-	err = runCmd("", fmt.Sprintf(`%sconsul acl token create -description "%s"  -policy-name %s > %s`, exports, description, policy, tokenPath), os.Stdout)
+	err := client.runConsul(func(exports string) error {
+		return runCmd("", fmt.Sprintf(`%sconsul acl token create -description "%s"  -policy-name %s > %s`, exports, description, policy, tokenPath), os.Stdout)
+	})
 	if err != nil {
 		return "", err
 	}
@@ -65,43 +63,34 @@ func (client *consulBinary) RegisterACL(description, policy string) (string, err
 }
 
 func (client *consulBinary) UpdateACL(tokenID, policy string) error {
-	exports, err := client.getExports()
-	if err != nil {
-		return err
-	}
-	return runCmd("", fmt.Sprintf(`%sconsul acl token update -id %s -policy-name=%s`, exports, tokenID, policy), os.Stdout)
+	return client.runConsul(func(exports string) error {
+		return runCmd("", fmt.Sprintf(`%sconsul acl token update -id %s -policy-name=%s`, exports, tokenID, policy), os.Stdout)
+	})
 }
 
 func (client *consulBinary) RegisterPolicy(name, file string) error {
-	exports, err := client.getExports()
-	if err != nil {
-		return err
-	}
-	return runCmd("", fmt.Sprintf(`%sconsul acl policy create -name %s -rules @%s`, exports, name, file), os.Stdout)
+	return client.runConsul(func(exports string) error {
+		return runCmd("", fmt.Sprintf(`%sconsul acl policy create -name %s -rules @%s`, exports, name, file), os.Stdout)
+	})
+
 }
 
 func (client *consulBinary) UpdatePolicy(name, file string) error {
-	exports, err := client.getExports()
-	if err != nil {
-		return err
-	}
-	return runCmd("", fmt.Sprintf(`%sconsul acl policy update -name %s -rules @%s`, exports, name, file), os.Stdout)
+	return client.runConsul(func(exports string) error {
+		return runCmd("", fmt.Sprintf(`%sconsul acl policy update -name %s -rules @%s`, exports, name, file), os.Stdout)
+	})
 }
 
 func (client *consulBinary) RegisterIntention(file string) error {
-	exports, err := client.getExports()
-	if err != nil {
-		return err
-	}
-	return runCmd("", fmt.Sprintf(`%sconsul config write %s`, exports, file), os.Stdout)
+	return client.runConsul(func(exports string) error {
+		return runCmd("", fmt.Sprintf(`%sconsul config write %s`, exports, file), os.Stdout)
+	})
 }
 
 func (client *consulBinary) RegisterService(file string) error {
-	exports, err := client.getExports()
-	if err != nil {
-		return err
-	}
-	return runCmd("", fmt.Sprintf(`%sconsul services register %s`, exports, file), os.Stdout)
+	return client.runConsul(func(exports string) error {
+		return runCmd("", fmt.Sprintf(`%sconsul services register %s`, exports, file), os.Stdout)
+	})
 }
 
 func (client *consulBinary) getExports() (string, error) {
@@ -114,4 +103,12 @@ func (client *consulBinary) getExports() (string, error) {
 	token := client.secrets.ConsulBootstrapToken
 	exports := fmt.Sprintf(`export CONSUL_HTTP_ADDR="%s:8501" && export CONSUL_HTTP_TOKEN="%s" && export CONSUL_CLIENT_CERT=%s/secrets/consul/consul-agent-ca.pem && export CONSUL_CLIENT_KEY=%s/secrets/consul/consul-agent-ca-key.pem && export CONSUL_HTTP_SSL=true && export CONSUL_HTTP_SSL_VERIFY=false && `, host, token, client.baseDir, client.baseDir)
 	return exports, nil
+}
+
+func (client *consulBinary) runConsul(fn func(string) error) error {
+	exports, err := client.getExports()
+	if err != nil {
+		return err
+	}
+	return fn(exports)
 }

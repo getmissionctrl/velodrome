@@ -2,8 +2,24 @@ package internal
 
 import (
 	"fmt"
+	"math/rand"
 	"os/exec"
+	"time"
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func RandString(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+	return string(b)
+}
 
 func commandExists(cmd string) bool {
 	_, err := exec.LookPath(cmd)
