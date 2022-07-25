@@ -9,3 +9,11 @@
 [clients]
 127.0.0.4 private_ip=10.0.0.5 host_name=ubuntu4
 127.0.0.5 private_ip=10.0.0.4 host_name=ubuntu5
+[grafana]
+195.201.222.106 private_ip=10.0.0.7 host_name=nomad-srv6
+[prometheus]
+195.201.222.106 private_ip=10.0.0.7 host_name=nomad-srv6
+[loki]
+195.201.222.106 private_ip=10.0.0.7 host_name=nomad-srv6
+[tempo]
+195.201.222.106 private_ip=10.0.0.7 host_name=nomad-srv6

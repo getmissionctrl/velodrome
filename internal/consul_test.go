@@ -27,24 +27,7 @@ func TestBootstrapConsul(t *testing.T) {
 		os.RemoveAll(filepath.Join(folder))
 	}()
 
-	secrets := &secretsConfig{
-		ConsulGossipKey:        "consulGossipKey",
-		NomadGossipKey:         "nomadGossipKey",
-		NomadClientConsulToken: "TBD",
-		NomadServerConsulToken: "TBD",
-		ConsulAgentToken:       "TBD",
-		ConsulBootstrapToken:   "TBD",
-		S3Endpoint:             "s3_endpoint_test",
-		S3SecretKey:            "s3_secret_key_test",
-		S3AccessKey:            "s3_access_key_test",
-	}
-
-	if _, err := os.Stat(filepath.Join(folder, "secrets", "secrets.yml")); errors.Is(err, os.ErrNotExist) {
-		d, err := yaml.Marshal(&secrets)
-		assert.NoError(t, err)
-		err = os.WriteFile(filepath.Join(folder, "secrets", "secrets.yml"), d, 0755)
-		assert.NoError(t, err)
-	}
+	mkSecrets(t, folder)
 
 	consul := &MockConsul{
 		BootstrapFunc: func() (string, error) {
@@ -69,4 +52,26 @@ func TestBootstrapConsul(t *testing.T) {
 	assert.Equal(t, newSecrets.ConsulAgentToken, "consul-policies")
 	assert.Equal(t, newSecrets.NomadClientConsulToken, "nomad-client")
 	assert.Equal(t, newSecrets.NomadServerConsulToken, "nomad-server")
+}
+
+func mkSecrets(t *testing.T, folder string) *secretsConfig {
+	secrets := &secretsConfig{
+		ConsulGossipKey:        "consulGossipKey",
+		NomadGossipKey:         "nomadGossipKey",
+		NomadClientConsulToken: "TBD",
+		NomadServerConsulToken: "TBD",
+		ConsulAgentToken:       "TBD",
+		ConsulBootstrapToken:   "TBD",
+		S3Endpoint:             "s3_endpoint_test",
+		S3SecretKey:            "s3_secret_key_test",
+		S3AccessKey:            "s3_access_key_test",
+	}
+
+	if _, err := os.Stat(filepath.Join(folder, "secrets", "secrets.yml")); errors.Is(err, os.ErrNotExist) {
+		d, err := yaml.Marshal(&secrets)
+		assert.NoError(t, err)
+		err = os.WriteFile(filepath.Join(folder, "secrets", "secrets.yml"), d, 0755)
+		assert.NoError(t, err)
+	}
+	return secrets
 }

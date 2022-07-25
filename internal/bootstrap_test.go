@@ -37,7 +37,7 @@ func TestMakeConsulPoliciesAndHashiConfigs(t *testing.T) {
 
 	assert.Contains(t, contents, `node "ubuntu1"`)
 
-	assert.Equal(t, 5, strings.Count(contents, "node"))
+	assert.Equal(t, 6, strings.Count(contents, "node"))
 
 	_, err = ioutil.ReadFile(filepath.Join(folder, "consul", "nomad-server-policy.hcl"))
 	assert.NoError(t, err)
