@@ -5,12 +5,12 @@ variable "hcloud_token" {
 
 variable "server_count" {
   type = number
-  default = {{.ClusterConfig.ServerCount}}
+  default = {{.ClusterConfig.Servers}}
 }
 
 variable "client_count" {
   type = number
-  default = {{.ClusterConfig.ClientCount}}
+  default = {{.ClusterConfig.Clients}}
 }
 
 variable "separate_consul_servers"{
@@ -20,41 +20,43 @@ variable "separate_consul_servers"{
 
 variable "multi_instance_observability" {
   type = bool
-  default = {{.ClusterConfig.MultiInstanceO11y}}
+  default = {{.ObservabilityConfig.MultiInstance}}
 }
 
 variable "ssh_keys" {
   type = list
-  default = ["wille.faler@gmail.com"]
+  default = [{{ range $key, $value := .CloudProviderConfig.ProviderSettings.ssh_keys}}
+   "{{ $value }}",{{ end }}
+  ]
 }
 
 variable "base_server_name" {
   type = string
-  default = "{{.ProviderConfig.ResourceNames.BaseServerName}}"
+  default = "{{.CloudProviderConfig.ProviderSettings.resource_names.base_server_name}}"
 }
 
 variable "firewall_name" {
   type = string
-  default = "{{.ProviderConfig.ResourceNames.FirewallName}}"
+  default = "{{.CloudProviderConfig.ProviderSettings.resource_names.firewall_name}}"
 }
 
 variable "network_name" {
   type = string
-  default = "{{.ProviderConfig.ResourceNames.NetworkName}}"
+  default = "{{.CloudProviderConfig.ProviderSettings.resource_names.network_name}}"
 }
 
 variable "allow_ips" {
   type = list
-  default = [
-      "85.4.84.201/32"
-    ]
+  default = [{{ range $key, $value := .CloudProviderConfig.ProviderSettings.allowed_ips}}
+   "{{ $value }}",{{ end }}
+  ]
 }
 
 variable "server_type"{
   type = string
-  default = "{{.ProviderConfig.ServerType}}"
+  default = "{{.CloudProviderConfig.ProviderSettings.server_type}}"
 }
 variable "location"{
   type = string
-  default = "{{.ProviderConfig.Location}}" #nbg1, fsn1, hel1 or ash
+  default = "{{.CloudProviderConfig.ProviderSettings.location}}" #nbg1, fsn1, hel1 or ash
 }

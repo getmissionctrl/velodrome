@@ -22,7 +22,7 @@ func TestLoadConfig(t *testing.T) {
 
 	assert.Equal(t, "loki", conf.ObservabilityConfig.LokiBucket)
 	assert.Equal(t, "tempo", conf.ObservabilityConfig.TempoBucket)
-	assert.Equal(t, true, conf.ObservabilityConfig.SingleInstance)
+	assert.Equal(t, false, conf.ObservabilityConfig.MultiInstance)
 
 	assert.Equal(t, 2, conf.ClusterConfig.Clients)
 	assert.Equal(t, 3, conf.ClusterConfig.Servers)

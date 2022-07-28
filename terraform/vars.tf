@@ -46,7 +46,8 @@ variable "network_name" {
 variable "allow_ips" {
   type = list
   default = [
-      "85.4.84.201/32"
+      "85.4.84.201/32",
+      "85.4.84.201/32",
     ]
 }
 

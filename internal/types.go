@@ -30,9 +30,9 @@ type CloudProvider struct {
 }
 
 type ObservabilityConfig struct {
-	TempoBucket    string `yaml:"tempo_bucket"`
-	LokiBucket     string `yaml:"loki_bucket"`
-	SingleInstance bool   `yaml:"single_instance"`
+	TempoBucket   string `yaml:"tempo_bucket"`
+	LokiBucket    string `yaml:"loki_bucket"`
+	MultiInstance bool   `yaml:"multi_instance"`
 }
 
 type HetznerResourceNames struct {

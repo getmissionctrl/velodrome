@@ -8,7 +8,7 @@ cluster_config:
   separate_consul_servers: false
 
 observability_config:
-  single_instance: true # sets all on 1 server if true, 4 separate if false
+  multi_instance: false # sets all on 1 server if false, 4 separate if true
   tempo_bucket: tempo
   loki_bucket: loki
 
