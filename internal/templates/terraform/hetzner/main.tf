@@ -29,7 +29,7 @@ locals {
       count = var.client_count, subnet = "3", group = 1
     },
     observability = {
-      count = var.multi_instance_observability ? 4 : 1, subnet = "4", group = 1
+      count = var.multi_instance_observability ? 4 : 1, subnet = "4", group = 0
     }
   }
 
