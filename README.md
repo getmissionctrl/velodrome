@@ -117,9 +117,9 @@ Run ansible:
     - [ ] Systemctl script & startup
     - [ ] Auto-unlock with script/ansible/terraform
     - [ ] Integrate with Nomad
-- [ ] Overall setup
-    - [ ] Terraform var generation
-    - [ ] Generate Ansible inventory from Terraform output
+- [x] Overall setup
+    - [x] Terraform var generation
+    - [x] Generate Ansible inventory from Terraform output
 - [ ] Grafana/Dashboards
     - [ ] Dashboards
         - [ ] Consul health
