@@ -1,9 +1,12 @@
 package internal
 
 import (
+	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 
+	"github.com/hashicorp/terraform-exec/tfexec"
 	"gopkg.in/yaml.v3"
 )
 
@@ -99,4 +102,10 @@ func LoadTFVarsConfig(config Config) (*TFVarsConfig, error) {
 		ClusterConfig:  config.ClusterConfig,
 		ProviderConfig: providerConfig,
 	}, nil
+}
+
+func LoadTFExecVars(config *Config) *tfexec.VarOption {
+
+	token := os.Getenv("HETZNER_TOKEN")
+	return tfexec.Var(fmt.Sprintf("hcloud_token=%s", token))
 }

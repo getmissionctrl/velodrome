@@ -7,8 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"time"
-
-	"github.com/hashicorp/terraform-exec/tfexec"
 )
 
 func Destroy(inventory, baseDir, user string) error {
@@ -41,10 +39,9 @@ func Bootstrap(ctx context.Context, config *Config, configPath string) error {
 	if err != nil {
 		return err
 	}
-	token := os.Getenv("HETZNER_TOKEN")
 	os.Remove(filepath.Join(config.BaseDir, "inventory-output.json")) //nolint
 
-	err = tf.Apply(ctx, tfexec.Var(fmt.Sprintf("hcloud_token=%s", token)))
+	err = tf.Apply(ctx, LoadTFExecVars(config))
 	if err != nil {
 		panic(err)
 	}
