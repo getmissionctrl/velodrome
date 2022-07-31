@@ -20,11 +20,12 @@ func TestParseConsulToken(t *testing.T) {
 
 func TestBootstrapConsul(t *testing.T) {
 	folder := RandString(8)
-	os.MkdirAll(filepath.Join(folder, "secrets"), 0755)
+	assert.NoError(t, os.MkdirAll(filepath.Clean(filepath.Join(folder, "secrets")), 0755))
 
-	os.MkdirAll(filepath.Join(folder, "consul"), 0755)
+	assert.NoError(t, os.MkdirAll(filepath.Clean(filepath.Join(folder, "consul")), 0755))
 	defer func() {
-		os.RemoveAll(filepath.Join(folder))
+		err := os.RemoveAll(filepath.Join(folder))
+		assert.NoError(t, err)
 	}()
 
 	mkSecrets(t, folder)

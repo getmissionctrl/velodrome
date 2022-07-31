@@ -13,7 +13,7 @@ import (
 )
 
 func parseConsulToken(file string) (string, error) {
-	content, err := ioutil.ReadFile(file)
+	content, err := ioutil.ReadFile(filepath.Clean(file))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -29,7 +29,7 @@ func parseConsulToken(file string) (string, error) {
 	return "", nil
 }
 
-func regenerateConsulPolicies(consul Consul, inventory *aini.InventoryData, secrets *secretsConfig, baseDir string) error {
+func regenerateConsulPolicies(consul Consul, inventory *aini.InventoryData, baseDir string) error {
 	err := makeConsulPolicies(inventory, baseDir)
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func BootstrapConsul(consul Consul, inventory *aini.InventoryData, baseDir strin
 	}
 
 	if secrets.ConsulBootstrapToken != "TBD" {
-		err = regenerateConsulPolicies(consul, inventory, secrets, baseDir)
+		err = regenerateConsulPolicies(consul, inventory, baseDir)
 		return false, err
 	}
 	token, err := consul.Bootstrap()
@@ -86,9 +86,9 @@ func BootstrapConsul(consul Consul, inventory *aini.InventoryData, baseDir strin
 	tokens := map[string]string{}
 
 	for k, v := range acls {
-		clientToken, err := consul.RegisterACL(k, v)
-		if err != nil {
-			return false, err
+		clientToken, e := consul.RegisterACL(k, v)
+		if e != nil {
+			return false, e
 		}
 		tokens[v] = clientToken
 	}

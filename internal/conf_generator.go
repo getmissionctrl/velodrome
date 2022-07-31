@@ -4,6 +4,8 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"os"
+	"path/filepath"
 	"text/template"
 )
 
@@ -13,7 +15,20 @@ var hetznerMain string
 //go:embed templates/terraform/hetzner/vars.tf
 var hetznerVars string
 
-func GenerateTerraform(config *Config) error {
+func GenerateServers(config *Config) error {
+	err := generateTerraform(config)
+	if err != nil {
+		return err
+	}
+
+	return generateInventory(config)
+}
+
+func generateInventory(config *Config) error {
+	return nil
+}
+
+func generateTerraform(config *Config) error {
 	settings := map[string]struct {
 		Main string
 		Vars string
@@ -35,17 +50,17 @@ func GenerateTerraform(config *Config) error {
 	}
 	var buf bytes.Buffer
 
-	fmt.Println(config)
-
 	err := tmpl.Execute(&buf, config)
 	if err != nil {
 		return err
 	}
-	fmt.Println(buf.String())
-
+	err = os.MkdirAll(filepath.Join(config.BaseDir, "terraform"), 0755)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func GenerateEnvFile() {
-
+func GenerateEnvFile() error {
+	return nil
 }

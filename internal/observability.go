@@ -86,7 +86,7 @@ func Observability(inventory, configFile, baseDir, user string) error {
 	}
 	consul := NewConsul(inv, sec, baseDir)
 
-	err = mkObservabilityConfigs(consul, inv, baseDir, user)
+	err = mkObservabilityConfigs(consul, inv, baseDir)
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func Observability(inventory, configFile, baseDir, user string) error {
 	return nil
 }
 
-func mkObservabilityConfigs(consul Consul, inv *aini.InventoryData, baseDir, user string) error {
+func mkObservabilityConfigs(consul Consul, inv *aini.InventoryData, baseDir string) error {
 	dirs := []string{
 		"prometheus", "loki", "grafana", "intentions", "tempo",
 	}

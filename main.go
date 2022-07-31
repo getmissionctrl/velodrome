@@ -10,8 +10,11 @@ import (
 )
 
 func main() {
-	os.Setenv("ANSIBLE_HOST_KEY_CHECKING", "False")
-
+	err := os.Setenv("ANSIBLE_HOST_KEY_CHECKING", "False")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 	if !internal.HasDependencies() {
 		os.Exit(1)
 	}
@@ -21,7 +24,7 @@ func main() {
 		Short: "sets up the hashistack",
 		Long:  `hshstack - setups up Consul & Nomad with ACL & Service Mesh enabled`,
 		Run: func(cmd *cobra.Command, args []string) {
-			err := cmd.Help()
+			err = cmd.Help()
 			if err != nil {
 				panic(err)
 			}
@@ -30,7 +33,7 @@ func main() {
 
 	rootCmd.AddCommand(sync(), destroy(), observability())
 
-	err := rootCmd.Execute()
+	err = rootCmd.Execute()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -111,7 +114,11 @@ func destroy() *cobra.Command {
 					fmt.Println(err)
 					os.Exit(1)
 				}
-				internal.Destroy(config.Inventory, config.BaseDir, config.CloudProviderConfig.User)
+				err = internal.Destroy(config.Inventory, config.BaseDir, config.CloudProviderConfig.User)
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
 				return
 			}
 			fmt.Println("Delete cancelled")

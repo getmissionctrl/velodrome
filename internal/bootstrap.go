@@ -104,7 +104,7 @@ func Configure(inventoryFile, baseDir, dcName string) error {
 
 func readInventory(inventoryFile string) (*aini.InventoryData, error) {
 
-	f, err := os.Open(inventoryFile)
+	f, err := os.Open(filepath.Clean(inventoryFile))
 	defer func() {
 		e := f.Close()
 		if e != nil {
@@ -121,7 +121,7 @@ func readInventory(inventoryFile string) (*aini.InventoryData, error) {
 }
 
 func getSecrets(baseDir string) (*secretsConfig, error) {
-	bytes, err := ioutil.ReadFile(filepath.Join(baseDir, "secrets", "secrets.yml"))
+	bytes, err := ioutil.ReadFile(filepath.Clean(filepath.Join(baseDir, "secrets", "secrets.yml")))
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +190,7 @@ func getHosts(inv *aini.InventoryData, group string) []string {
 	hosts := []string{}
 	for k, v := range inv.Groups {
 		if k == group {
-			for hostname, _ := range v.Hosts {
+			for hostname := range v.Hosts {
 				hosts = append(hosts, hostname)
 			}
 			return hosts
@@ -316,14 +316,14 @@ func Secrets(inv *aini.InventoryData, baseDir, dcName string) error {
 		S3AccessKey:            os.Getenv("S3_ACCESS_KEY"),
 	}
 
-	if _, err := os.Stat(filepath.Join(baseDir, "secrets", "secrets.yml")); errors.Is(err, os.ErrNotExist) {
-		d, err := yaml.Marshal(&secrets)
-		if err != nil {
-			return err
+	if _, err1 := os.Stat(filepath.Join(baseDir, "secrets", "secrets.yml")); errors.Is(err1, os.ErrNotExist) {
+		d, e := yaml.Marshal(&secrets)
+		if e != nil {
+			return e
 		}
-		err = os.WriteFile(filepath.Join(baseDir, "secrets", "secrets.yml"), d, 0755)
-		if err != nil {
-			return err
+		e = os.WriteFile(filepath.Join(baseDir, "secrets", "secrets.yml"), d, 0755)
+		if e != nil {
+			return e
 		}
 	}
 
@@ -387,6 +387,9 @@ func runCmd(dir, command string, stdOut io.Writer) error {
 	cmd.Stdout = stdOut
 	cmd.Stderr = os.Stderr
 
-	cmd.Start()
+	err := cmd.Start()
+	if err != nil {
+		return err
+	}
 	return cmd.Wait()
 }

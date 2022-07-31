@@ -9,7 +9,7 @@ import (
 func TestGenerateTerraform(t *testing.T) {
 	config, err := LoadConfig("testdata/config.yaml")
 	assert.NoError(t, err)
-	err = GenerateTerraform(config)
+	err = GenerateServers(config)
 	assert.NoError(t, err)
 	assert.True(t, false)
 }
