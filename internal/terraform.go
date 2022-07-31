@@ -17,16 +17,16 @@ func InitTf(ctx context.Context, workingDir string, stdOut, stdErr io.Writer) (*
 
 	i := install.NewInstaller()
 
-	v1_2_5 := version.Must(version.NewVersion("1.2.5"))
+	version := version.Must(version.NewVersion("1.2.6"))
 
 	execPath, err := i.Ensure(ctx, []src.Source{
 		&fs.ExactVersion{
 			Product: product.Terraform,
-			Version: v1_2_5,
+			Version: version,
 		},
 		&releases.ExactVersion{
 			Product: product.Terraform,
-			Version: v1_2_5,
+			Version: version,
 		},
 	})
 	if err != nil {

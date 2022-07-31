@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -53,7 +54,7 @@ func sync() *cobra.Command {
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			err = internal.Bootstrap(config, configFile)
+			err = internal.Bootstrap(context.Background(), config, configFile)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
