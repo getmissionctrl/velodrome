@@ -23,7 +23,7 @@ locals {
       count = var.server_count, subnet = "1", group = 0
     },
     vault = {
-      count = 0, subnet = "2", group = 0
+      count = var.vault_count, subnet = "2", group = 0
     },
     client = {
       count = var.client_count, subnet = "3", group = 1

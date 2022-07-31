@@ -21,6 +21,7 @@ type Config struct {
 type ClusterConfig struct {
 	Servers               int  `yaml:"servers"`
 	Clients               int  `yaml:"clients"`
+	VaultServers          int  `yaml:"vault_servers"`
 	SeparateConsulServers bool `yaml:"separate_consul_servers"`
 }
 

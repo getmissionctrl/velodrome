@@ -13,6 +13,11 @@ variable "client_count" {
   default = {{.ClusterConfig.Clients}}
 }
 
+variable "vault_count" {
+  type = number
+  default = {{.ClusterConfig.VaultServers}}
+}
+
 variable "separate_consul_servers"{
   type = bool
   default = {{.ClusterConfig.SeparateConsulServers}}
