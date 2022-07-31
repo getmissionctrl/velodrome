@@ -42,20 +42,28 @@ func Bootstrap(ctx context.Context, config *Config, configPath string) error {
 		return err
 	}
 	token := os.Getenv("HETZNER_TOKEN")
-	os.Remove(filepath.Join(config.BaseDir, "inventory-output.json"))
+	os.Remove(filepath.Join(config.BaseDir, "inventory-output.json")) //nolint
 
-	tf.Apply(ctx, tfexec.Var(fmt.Sprintf("hcloud_token=%s", token)))
+	err = tf.Apply(ctx, tfexec.Var(fmt.Sprintf("hcloud_token=%s", token)))
+	if err != nil {
+		panic(err)
+	}
 	f, err := os.OpenFile(filepath.Join(config.BaseDir, "inventory-output.json"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
-
+	defer func() {
+		e := f.Close()
+		fmt.Println(e)
+	}()
 	tf, err = InitTf(ctx, filepath.Join(config.BaseDir, "terraform"), f, os.Stderr)
 	if err != nil {
 		return err
 	}
-	tf.Output(ctx)
+	_, err = tf.Output(ctx)
+	if err != nil {
+		return err
+	}
 
 	err = GenerateInventory(config)
 	if err != nil {

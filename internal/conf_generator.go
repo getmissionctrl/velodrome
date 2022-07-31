@@ -69,7 +69,10 @@ func GenerateInventory(config *Config) error {
 	if err != nil {
 		return err
 	}
-	defer jsonFile.Close()
+	defer func() {
+		e := jsonFile.Close()
+		fmt.Println(e)
+	}()
 	byteValue, err := ioutil.ReadAll(jsonFile)
 	if err != nil {
 		return err

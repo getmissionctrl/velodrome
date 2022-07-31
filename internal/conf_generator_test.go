@@ -55,18 +55,18 @@ func TestGenerateTerraform(t *testing.T) {
 	folder := RandString(8)
 	config.BaseDir = folder
 	defer func() {
-		err := os.RemoveAll(filepath.Join(folder))
-		assert.NoError(t, err)
+		e := os.RemoveAll(filepath.Clean(folder))
+		assert.NoError(t, e)
 	}()
 
 	err = GenerateTerraform(config)
 	assert.NoError(t, err)
 
 	parser := hclparse.NewParser()
-	f, parseDiags := parser.ParseHCLFile(filepath.Join(folder, "terraform", "vars.tf"))
+	f, parseDiags := parser.ParseHCLFile(filepath.Clean(filepath.Join(folder, "terraform", "vars.tf")))
 	assert.False(t, parseDiags.HasErrors())
 
-	_, parseDiags = parser.ParseHCLFile(filepath.Join(folder, "terraform", "main.tf"))
+	_, parseDiags = parser.ParseHCLFile(filepath.Clean(filepath.Join(folder, "terraform", "main.tf")))
 	assert.False(t, parseDiags.HasErrors())
 
 	var conf tfConfig
@@ -120,14 +120,14 @@ func TestGenerateInventory(t *testing.T) {
 	err = os.MkdirAll(folder, 0700)
 	assert.NoError(t, err)
 	defer func() {
-		err := os.RemoveAll(filepath.Join(folder))
-		assert.NoError(t, err)
+		e := os.RemoveAll(filepath.Join(folder))
+		assert.NoError(t, e)
 	}()
 
 	src := filepath.Join("testdata", "inventory.json")
 	dest := filepath.Join(folder, "inventory-output.json")
 
-	bytesRead, err := ioutil.ReadFile(src)
+	bytesRead, err := ioutil.ReadFile(filepath.Clean(src))
 	assert.NoError(t, err)
 	fmt.Println(string(bytesRead))
 
@@ -136,7 +136,7 @@ func TestGenerateInventory(t *testing.T) {
 
 	err = GenerateInventory(config)
 	assert.NoError(t, err)
-	bytesRead, err = ioutil.ReadFile(filepath.Join(folder, "inventory"))
+	bytesRead, err = ioutil.ReadFile(filepath.Clean(filepath.Join(folder, "inventory")))
 	assert.NoError(t, err)
 	assert.Equal(t, inventoryResultTest, string(bytesRead))
 }
