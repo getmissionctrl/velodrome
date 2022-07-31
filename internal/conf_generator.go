@@ -54,7 +54,7 @@ func generateTerraform(config *Config) error {
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(filepath.Join(config.BaseDir, "terraform"), 0755)
+	err = os.MkdirAll(filepath.Join(config.BaseDir, "terraform"), 0750)
 	if err != nil {
 		return err
 	}

@@ -71,17 +71,17 @@ var destroyAnsible string
 //calculate bootstrap expect from files
 func Configure(inventoryFile, baseDir, dcName string) error {
 
-	err := os.MkdirAll(filepath.Join(baseDir), 0755)
+	err := os.MkdirAll(filepath.Join(baseDir), 0750)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join(baseDir, "setup.yml"), []byte(strings.ReplaceAll(setupAnsible, "dc1", dcName)), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "setup.yml"), []byte(strings.ReplaceAll(setupAnsible, "dc1", dcName)), 0600)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join(baseDir, "destroy.yml"), []byte(destroyAnsible), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "destroy.yml"), []byte(destroyAnsible), 0600)
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func getSecrets(baseDir string) (*secretsConfig, error) {
 
 func makeConsulPolicies(inv *aini.InventoryData, baseDir string) error {
 
-	err := os.MkdirAll(filepath.Join(baseDir, "consul"), 0755)
+	err := os.MkdirAll(filepath.Join(baseDir, "consul"), 0750)
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func makeConsulPolicies(inv *aini.InventoryData, baseDir string) error {
 	}
 
 	output := buf.Bytes()
-	err = os.WriteFile(filepath.Join(baseDir, "consul", "consul-policies.hcl"), output, 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "consul", "consul-policies.hcl"), output, 0600)
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func makeConsulPolicies(inv *aini.InventoryData, baseDir string) error {
 		filepath.Join(baseDir, "consul", "anonymous-policy.hcl"):    anonymousDns,
 	}
 	for k, v := range toCopy {
-		err = os.WriteFile(k, []byte(v), 0755)
+		err = os.WriteFile(k, []byte(v), 0600)
 		if err != nil {
 			return err
 		}
@@ -233,7 +233,7 @@ func makeConfigs(inv *aini.InventoryData, baseDir, dcName string) error {
 	}
 	clientWithDC := strings.ReplaceAll(consulClient, "dc1", dcName)
 	clientWithDC = strings.ReplaceAll(clientWithDC, "join_servers", hosts)
-	err := os.WriteFile(filepath.Join(baseDir, "consul", "client.j2"), []byte(clientWithDC), 0755)
+	err := os.WriteFile(filepath.Join(baseDir, "consul", "client.j2"), []byte(clientWithDC), 0600)
 	if err != nil {
 		return err
 	}
@@ -241,16 +241,16 @@ func makeConfigs(inv *aini.InventoryData, baseDir, dcName string) error {
 	serverWithDC := strings.ReplaceAll(consulServer, "dc1", dcName)
 	serverWithDC = strings.ReplaceAll(serverWithDC, "join_servers", hosts)
 	serverWithDC = strings.ReplaceAll(serverWithDC, "EXPECTS_NO", fmt.Sprintf("%v", len(getHosts(inv, "consul_servers"))))
-	err = os.WriteFile(filepath.Join(baseDir, "consul", "server.j2"), []byte(serverWithDC), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "consul", "server.j2"), []byte(serverWithDC), 0600)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join(baseDir, "consul", "resolved.conf"), []byte(resolvedConf), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "consul", "resolved.conf"), []byte(resolvedConf), 0600)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(filepath.Join(baseDir, "nomad"), 0755)
+	err = os.MkdirAll(filepath.Join(baseDir, "nomad"), 0750)
 	if err != nil {
 		return err
 	}
@@ -270,7 +270,7 @@ func makeConfigs(inv *aini.InventoryData, baseDir, dcName string) error {
 	}
 
 	for k, v := range toWrite {
-		err = os.WriteFile(k, []byte(v), 0755)
+		err = os.WriteFile(k, []byte(v), 0600)
 		if err != nil {
 			return err
 		}
@@ -287,7 +287,7 @@ func Secrets(inv *aini.InventoryData, baseDir, dcName string) error {
 	}
 	consulSecretDir := filepath.Join(baseDir, "secrets", "consul")
 	nomadSecretDir := filepath.Join(baseDir, "secrets", "nomad")
-	err = os.MkdirAll(consulSecretDir, 0755)
+	err = os.MkdirAll(consulSecretDir, 0750)
 	if err != nil {
 		return err
 	}
@@ -321,7 +321,7 @@ func Secrets(inv *aini.InventoryData, baseDir, dcName string) error {
 		if e != nil {
 			return e
 		}
-		e = os.WriteFile(filepath.Join(baseDir, "secrets", "secrets.yml"), d, 0755)
+		e = os.WriteFile(filepath.Join(baseDir, "secrets", "secrets.yml"), d, 0600)
 		if e != nil {
 			return e
 		}
@@ -330,7 +330,7 @@ func Secrets(inv *aini.InventoryData, baseDir, dcName string) error {
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(nomadSecretDir, 0755)
+	err = os.MkdirAll(nomadSecretDir, 0750)
 	if err != nil {
 		return err
 	}
@@ -356,7 +356,7 @@ func Secrets(inv *aini.InventoryData, baseDir, dcName string) error {
 		hostString := fmt.Sprintf("server.global.nomad,%s,%s", strings.Join(hosts, ","), strings.Join(privateHosts, ","))
 		fmt.Println("generating cert for hosts: " + hostString)
 
-		err = os.WriteFile(filepath.Join(nomadSecretDir, "cfssl.json"), []byte(cfssl), 0755)
+		err = os.WriteFile(filepath.Join(nomadSecretDir, "cfssl.json"), []byte(cfssl), 0600)
 		if err != nil {
 			return err
 		}

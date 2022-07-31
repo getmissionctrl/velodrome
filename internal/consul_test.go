@@ -20,9 +20,9 @@ func TestParseConsulToken(t *testing.T) {
 
 func TestBootstrapConsul(t *testing.T) {
 	folder := RandString(8)
-	assert.NoError(t, os.MkdirAll(filepath.Clean(filepath.Join(folder, "secrets")), 0755))
+	assert.NoError(t, os.MkdirAll(filepath.Clean(filepath.Join(folder, "secrets")), 0750))
 
-	assert.NoError(t, os.MkdirAll(filepath.Clean(filepath.Join(folder, "consul")), 0755))
+	assert.NoError(t, os.MkdirAll(filepath.Clean(filepath.Join(folder, "consul")), 0750))
 	defer func() {
 		err := os.RemoveAll(filepath.Join(folder))
 		assert.NoError(t, err)
@@ -55,7 +55,7 @@ func TestBootstrapConsul(t *testing.T) {
 	assert.Equal(t, newSecrets.NomadServerConsulToken, "nomad-server")
 }
 
-func mkSecrets(t *testing.T, folder string) *secretsConfig {
+func mkSecrets(t *testing.T, folder string) *secretsConfig { //nolint
 	secrets := &secretsConfig{
 		ConsulGossipKey:        "consulGossipKey",
 		NomadGossipKey:         "nomadGossipKey",
@@ -69,9 +69,9 @@ func mkSecrets(t *testing.T, folder string) *secretsConfig {
 	}
 
 	if _, err := os.Stat(filepath.Join(folder, "secrets", "secrets.yml")); errors.Is(err, os.ErrNotExist) {
-		d, err := yaml.Marshal(&secrets)
+		d, err := yaml.Marshal(secrets)
 		assert.NoError(t, err)
-		err = os.WriteFile(filepath.Join(folder, "secrets", "secrets.yml"), d, 0755)
+		err = os.WriteFile(filepath.Join(folder, "secrets", "secrets.yml"), d, 0600)
 		assert.NoError(t, err)
 	}
 	return secrets

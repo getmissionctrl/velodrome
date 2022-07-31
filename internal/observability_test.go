@@ -10,9 +10,9 @@ import (
 
 func TestMkObservabilityConfigs(t *testing.T) {
 	folder := RandString(8)
-	assert.NoError(t, os.MkdirAll(filepath.Join(folder, "secrets"), 0755))
+	assert.NoError(t, os.MkdirAll(filepath.Join(folder, "secrets"), 0750))
 
-	assert.NoError(t, os.MkdirAll(filepath.Join(folder, "consul"), 0755))
+	assert.NoError(t, os.MkdirAll(filepath.Join(folder, "consul"), 0750))
 	defer func() {
 		assert.NoError(t, os.RemoveAll(filepath.Join(folder)))
 	}()

@@ -106,7 +106,7 @@ func mkObservabilityConfigs(consul Consul, inv *aini.InventoryData, baseDir stri
 		"prometheus", "loki", "grafana", "intentions", "tempo",
 	}
 	for _, dir := range dirs {
-		err := os.MkdirAll(filepath.Join(baseDir, dir), 0755)
+		err := os.MkdirAll(filepath.Join(baseDir, dir), 0750)
 		if err != nil {
 			return err
 		}
@@ -125,7 +125,7 @@ func mkObservabilityConfigs(consul Consul, inv *aini.InventoryData, baseDir stri
 		filepath.Join(baseDir, "loki", "promtail.yml"):                promtailConf,
 	}
 	for k, v := range toWrite {
-		err := os.WriteFile(k, []byte(v), 0755)
+		err := os.WriteFile(k, []byte(v), 0600)
 		if err != nil {
 			return err
 		}
@@ -152,7 +152,7 @@ func mkObservabilityConfigs(consul Consul, inv *aini.InventoryData, baseDir stri
 
 	output := buf.Bytes()
 
-	err = os.WriteFile(filepath.Join(baseDir, "prometheus", "prometheus.yml"), []byte(output), 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "prometheus", "prometheus.yml"), []byte(output), 0600)
 	if err != nil {
 		return err
 	}
@@ -194,13 +194,13 @@ func mkObservabilityConfigs(consul Consul, inv *aini.InventoryData, baseDir stri
 		servers := getPrivateHosts(inv, service.hostGroup)
 		fmt.Println(servers)
 		template := strings.ReplaceAll(service.template, "HOST", servers[0])
-		err = os.WriteFile(filepath.Clean(service.file), []byte(template), 0755)
+		err = os.WriteFile(filepath.Clean(service.file), []byte(template), 0600)
 		if err != nil {
 			return err
 		}
 		intention := strings.ReplaceAll(consulIntention, "SRVC", service.name)
 		intentionFile := filepath.Join(baseDir, "intentions", fmt.Sprintf("%s.hcl", service.name))
-		err = os.WriteFile(intentionFile, []byte(intention), 0755)
+		err = os.WriteFile(intentionFile, []byte(intention), 0600)
 		if err != nil {
 			return err
 		}

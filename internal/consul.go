@@ -102,7 +102,7 @@ func BootstrapConsul(consul Consul, inventory *aini.InventoryData, baseDir strin
 	if err != nil {
 		return false, err
 	}
-	err = os.WriteFile(filepath.Join(baseDir, "secrets", "secrets.yml"), d, 0755)
+	err = os.WriteFile(filepath.Join(baseDir, "secrets", "secrets.yml"), d, 0600)
 
 	return true, err
 }
