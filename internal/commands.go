@@ -66,6 +66,7 @@ func Bootstrap(ctx context.Context, config *Config, configPath string) error {
 	if err != nil {
 		return err
 	}
+
 	err = Configure(inventory, baseDir, dcName)
 	if err != nil {
 		return err

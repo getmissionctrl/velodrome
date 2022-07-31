@@ -88,38 +88,46 @@ func GenerateInventory(config *Config) error {
 		inventory.ConsulServers.Value = inventory.NomadServers.Value
 	}
 
+	takeFirst := len(inventory.ObservabilityServers.Value) == 1
+	if takeFirst {
+		inventory.grafanaServers = []string{inventory.ObservabilityServers.Value[0]}
+		inventory.prometheusServers = []string{inventory.ObservabilityServers.Value[0]}
+		inventory.lokiServers = []string{inventory.ObservabilityServers.Value[0]}
+		inventory.tempoServers = []string{inventory.ObservabilityServers.Value[0]}
+	} else {
+		inventory.grafanaServers = []string{inventory.ObservabilityServers.Value[0]}
+		inventory.prometheusServers = []string{inventory.ObservabilityServers.Value[1]}
+		inventory.lokiServers = []string{inventory.ObservabilityServers.Value[2]}
+		inventory.tempoServers = []string{inventory.ObservabilityServers.Value[3]}
+	}
+
 	sections := []struct {
-		name      string
-		values    []string
-		takeFirst bool
+		name   string
+		values []string
 	}{
 		{name: "consul_servers",
-			values:    inventory.ConsulServers.Value,
-			takeFirst: false},
+			values: inventory.ConsulServers.Value,
+		},
 		{name: "vault_servers",
-			values:    inventory.VaultServers.Value,
-			takeFirst: false},
+			values: inventory.VaultServers.Value,
+		},
 		{name: "nomad_servers",
-			values:    inventory.NomadServers.Value,
-			takeFirst: false},
+			values: inventory.NomadServers.Value,
+		},
 		{name: "clients",
-			values:    inventory.Clients.Value,
-			takeFirst: false},
+			values: inventory.Clients.Value,
+		},
 		{name: "grafana",
-			values:    inventory.ObservabilityServers.Value,
-			takeFirst: len(inventory.ObservabilityServers.Value) == 1,
+			values: inventory.grafanaServers,
 		},
 		{name: "prometheus",
-			values:    inventory.ObservabilityServers.Value,
-			takeFirst: len(inventory.ObservabilityServers.Value) == 1,
+			values: inventory.prometheusServers,
 		},
 		{name: "loki",
-			values:    inventory.ObservabilityServers.Value,
-			takeFirst: len(inventory.ObservabilityServers.Value) == 1,
+			values: inventory.lokiServers,
 		},
 		{name: "tempo",
-			values:    inventory.ObservabilityServers.Value,
-			takeFirst: len(inventory.ObservabilityServers.Value) == 1,
+			values: inventory.tempoServers,
 		},
 	}
 
@@ -127,12 +135,8 @@ func GenerateInventory(config *Config) error {
 	for _, section := range sections {
 		if len(section.values) > 0 {
 			inventoryStr = fmt.Sprintf("%s[%s]\n", inventoryStr, section.name)
-			if section.takeFirst {
-				inventoryStr = fmt.Sprintf("%s%s\n", inventoryStr, section.values[0])
-			} else {
-				for _, v := range section.values {
-					inventoryStr = fmt.Sprintf("%s%s\n", inventoryStr, v)
-				}
+			for _, v := range section.values {
+				inventoryStr = fmt.Sprintf("%s%s\n", inventoryStr, v)
 			}
 		}
 	}
@@ -147,6 +151,10 @@ type InventoryJson struct {
 	ObservabilityServers InvValue `json:"o11y_servers"`
 	VaultServers         InvValue `json:"vault_servers"`
 	ConsulServers        InvValue `json:"consul_servers"`
+	prometheusServers    []string
+	grafanaServers       []string
+	lokiServers          []string
+	tempoServers         []string
 }
 type InvValue struct {
 	Value []string `json:"value"`
