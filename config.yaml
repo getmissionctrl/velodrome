@@ -21,7 +21,7 @@ cloud_provider_config:
     - wille.faler@gmail.com
     server_type: cx21
     resource_names:
-      base_server_name: nomad-srv
+      base_server_name: venue
       firewall_name: dev_firewall
       network_name: dev_network
     allowed_ips:

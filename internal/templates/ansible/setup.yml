@@ -124,7 +124,7 @@
     - name: setup CNI plugin
       ansible.builtin.command: echo 1 | sudo tee /proc/sys/net/bridge/bridge-nf-call-arptables && echo 1 | sudo tee /proc/sys/net/bridge/bridge-nf-call-ip6tables && echo 1 | sudo tee /proc/sys/net/bridge/bridge-nf-call-iptables
 
-- hosts: clients:grafana:prometheus:loki:tempo
+- hosts: all,!consul_servers
   become: yes
   tasks:
     - name: copy agent config
@@ -137,13 +137,6 @@
 - hosts: clients
   become: yes
   tasks:
-    - name: copy agent config
-      template:
-        src: consul/client.j2
-        dest: /etc/consul.d/consul.hcl
-        owner: consul
-        group: consul
-        mode: 0644
     - name: Creates config dir
       file:
         path: /etc/nomad.d
