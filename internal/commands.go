@@ -23,7 +23,7 @@ func Destroy(inventory, baseDir, user string) error {
 }
 
 func Bootstrap(config *Config, configPath string) error {
-	inventory := config.Inventory
+	inventory := filepath.Join(config.BaseDir, "inventory")
 	dcName := config.DC
 	user := config.CloudProviderConfig.User
 	baseDir := config.BaseDir

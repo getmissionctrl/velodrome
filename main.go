@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/chaordic-io/venue-cluster/internal"
 	"github.com/spf13/cobra"
@@ -77,7 +78,7 @@ func observability() *cobra.Command {
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			err = internal.Observability(config.Inventory, configFile, config.BaseDir, config.CloudProviderConfig.User)
+			err = internal.Observability(filepath.Join(config.BaseDir, "inventory"), configFile, config.BaseDir, config.CloudProviderConfig.User)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -114,7 +115,7 @@ func destroy() *cobra.Command {
 					fmt.Println(err)
 					os.Exit(1)
 				}
-				err = internal.Destroy(config.Inventory, config.BaseDir, config.CloudProviderConfig.User)
+				err = internal.Destroy(filepath.Join(config.BaseDir, "inventory"), config.BaseDir, config.CloudProviderConfig.User)
 				if err != nil {
 					fmt.Println(err)
 					os.Exit(1)

@@ -9,7 +9,6 @@ import (
 
 type Config struct {
 	DC                  string              `yaml:"dc_name"`
-	Inventory           string              `yaml:"inventory"`
 	BaseDir             string              `yaml:"baseDir"`
 	CloudProviderConfig CloudProvider       `yaml:"cloud_provider_config"`
 	ClusterConfig       ClusterConfig       `yaml:"cluster_config"`

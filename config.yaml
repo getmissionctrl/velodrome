@@ -1,5 +1,4 @@
 dc_name: hetzner
-inventory: datacenters/hetzner/inventory
 baseDir: config
 
 cluster_config:
