@@ -5,6 +5,7 @@ Sets up Consul & Nomad Servers & Clients given an inventory.
 Your machine/operator node will need the following pre-installed:
 * `nomad`
 * `consul`
+* `vault`
 * `ansible`
 * `cfssl` & `cfssljson`
 
@@ -23,17 +24,6 @@ git secret reveal
 git secret
 ```
 
-## Instructions on setup on existing servers
-
-```
- ansible-playbook setup.yml -i datacenters/contabo/inventory -u root -e @secrets/secrets.yml
-```
-
-On AWS: 
-
-```
- ansible-playbook setup.yml -i datacenters/aws/inventory -u ubuntu -e @secrets/secrets.yml --private-key venue-dev.pem
-```
 
 ## Instructions on new server
 When a new server is added:
@@ -93,6 +83,12 @@ Run ansible:
     - [x] Add configs to cluster
     - [x] Systemctl scripts and startup
 - [x] Nomad & consul bootstrap expects based on inventory 
+- [ ] Vault setup
+    - [ ] setup cluster secrets
+    - [ ] template configs
+    - [ ] Systemctl script & startup
+    - [ ] Auto-unlock with script/ansible/terraform
+    - [ ] Integrate with Nomad
 - [ ] Observability
     - [x] Server health
         - [x] CPU monitor
@@ -111,12 +107,6 @@ Run ansible:
     - [ ] Pull private docker images
     - [ ] Observability ingress
     - [x] Auto-accept server signatures on first time connect
-- [ ] Vault setup
-    - [ ] setup cluster secrets
-    - [ ] template configs
-    - [ ] Systemctl script & startup
-    - [ ] Auto-unlock with script/ansible/terraform
-    - [ ] Integrate with Nomad
 - [x] Overall setup
     - [x] Terraform var generation
     - [x] Generate Ansible inventory from Terraform output

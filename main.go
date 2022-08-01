@@ -33,7 +33,7 @@ func main() {
 		},
 	}
 
-	rootCmd.AddCommand(sync(), destroy(), observability())
+	rootCmd.AddCommand(sync(), destroy(), observability(), envRC())
 
 	err = rootCmd.Execute()
 	if err != nil {
@@ -63,6 +63,39 @@ func sync() *cobra.Command {
 	}
 
 	addFlags(cmd, &configFile)
+
+	return cmd
+}
+
+func envRC() *cobra.Command {
+	var configFile string
+	var targetDir string
+	cmd := &cobra.Command{
+		Use:   "genenv",
+		Short: "Generate env file to source for your environment",
+		Long:  `Generate env file to source for your environment`,
+		Run: func(cmd *cobra.Command, args []string) {
+			config, err := internal.LoadConfig(configFile)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			err = internal.GenerateEnvFile(config, targetDir)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		},
+	}
+
+	addFlags(cmd, &configFile)
+	cmd.Flags().StringVarP(&targetDir, "target.dir", "t", "", "target directory of .envrc file")
+
+	err := cmd.MarkFlagRequired("config.file")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	return cmd
 }
