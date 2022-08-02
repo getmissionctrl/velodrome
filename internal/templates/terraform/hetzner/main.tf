@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     hcloud = {
-      source = "hetznercloud/hcloud"
+      source  = "hetznercloud/hcloud"
       version = "1.34.3"
     }
   }
@@ -36,10 +36,10 @@ locals {
   servers = flatten([
     for name, value in local.groups : [
       for i in range(value.count) : {
-        group_name = name, 
-        private_ip = "10.0.${value.subnet}.${i + 2}", 
-        name = "${var.base_server_name}-${name}-${i +1}", 
-        group = value.group
+        group_name = name,
+        private_ip = "10.0.${value.subnet}.${i + 2}",
+        name       = "${var.base_server_name}-${name}-${i + 1}",
+        group      = value.group
       }
     ]
   ])
@@ -48,12 +48,12 @@ locals {
 }
 
 resource "hcloud_network" "private_network" {
-  name     = "${var.network_name}"
+  name     = var.network_name
   ip_range = "10.0.0.0/16"
 }
 
 resource "hcloud_network_subnet" "network_subnet" {
-  for_each = local.groups
+  for_each     = local.groups
   network_id   = hcloud_network.private_network.id
   type         = "cloud"
   network_zone = "eu-central"
@@ -62,23 +62,23 @@ resource "hcloud_network_subnet" "network_subnet" {
 
 resource "hcloud_placement_group" "placement_group" {
   count = local.placement_groups
-  name = "server_placement_spread_group-${count.index}"
-  type = "spread"
+  name  = "server_placement_spread_group-${count.index}"
+  type  = "spread"
 }
 
 
 resource "hcloud_firewall" "network_firewall" {
-  name = "${var.firewall_name}"
+  name = var.firewall_name
   rule {
-    direction = "in"
-    protocol  = "tcp"
-    port  = "1-10000"
+    direction  = "in"
+    protocol   = "tcp"
+    port       = "1-10000"
     source_ips = var.allow_ips
   }
 
   rule {
     direction = "in"
-    protocol      = "icmp"
+    protocol  = "icmp"
     source_ips = [
       "0.0.0.0/0",
       "::/0"
@@ -87,13 +87,13 @@ resource "hcloud_firewall" "network_firewall" {
 }
 
 resource "hcloud_server" "server_node" {
-  for_each      = { for entry in local.servers: "${entry.name}" => entry }
-  name        = "${each.value.name}"
-  image       = "ubuntu-22.04"
-  server_type = var.server_type
-  location = var.location
+  for_each           = { for entry in local.servers : "${entry.name}" => entry }
+  name               = each.value.name
+  image              = "ubuntu-22.04"
+  server_type        = var.server_type
+  location           = var.location
   placement_group_id = hcloud_placement_group.placement_group[each.value.group].id
-  firewall_ids = [hcloud_firewall.network_firewall.id]
+  firewall_ids       = [hcloud_firewall.network_firewall.id]
 
   public_net {
     ipv4_enabled = true
@@ -115,7 +115,7 @@ resource "hcloud_server" "server_node" {
 }
 
 resource "hcloud_server_network" "network_binding" {
-  for_each    = { for entry in local.servers: "${entry.name}" => entry }
+  for_each   = { for entry in local.servers : "${entry.name}" => entry }
   server_id  = hcloud_server.server_node[each.value.name].id
   network_id = hcloud_network.private_network.id
   ip         = each.value.private_ip
@@ -125,8 +125,8 @@ resource "hcloud_server_network" "network_binding" {
 output "consul_servers" {
   value = flatten([
     for index, node in hcloud_server.server_node : [
-      for server in local.servers: 
-      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip}" if server.name == node.name 
+      for server in local.servers :
+      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip}" if server.name == node.name
     ] if node.labels["group"] == "consul"
   ])
 }
@@ -134,8 +134,8 @@ output "consul_servers" {
 output "nomad_servers" {
   value = flatten([
     for index, node in hcloud_server.server_node : [
-      for server in local.servers: 
-      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip}" if server.name == node.name 
+      for server in local.servers :
+      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip}" if server.name == node.name
     ] if node.labels["group"] == "nomad-server"
   ])
 }
@@ -143,8 +143,8 @@ output "nomad_servers" {
 output "vault_servers" {
   value = flatten([
     for index, node in hcloud_server.server_node : [
-      for server in local.servers: 
-      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip}" if server.name == node.name 
+      for server in local.servers :
+      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip}" if server.name == node.name
     ] if node.labels["group"] == "vault"
   ])
 }
@@ -152,8 +152,8 @@ output "vault_servers" {
 output "client_servers" {
   value = flatten([
     for index, node in hcloud_server.server_node : [
-      for server in local.servers: 
-      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip}" if server.name == node.name 
+      for server in local.servers :
+      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip}" if server.name == node.name
     ] if node.labels["group"] == "client"
   ])
 }
@@ -161,8 +161,8 @@ output "client_servers" {
 output "o11y_servers" {
   value = flatten([
     for index, node in hcloud_server.server_node : [
-      for server in local.servers: 
-      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip}" if server.name == node.name 
+      for server in local.servers :
+      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip}" if server.name == node.name
     ] if node.labels["group"] == "observability"
   ])
 }
