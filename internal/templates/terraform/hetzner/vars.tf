@@ -63,5 +63,5 @@ variable "server_type"{
 }
 variable "location"{
   type = string
-  default = "{{.CloudProviderConfig.ProviderSettings.location}}" #nbg1, fsn1, hel1 or ash
+  default = "{{.CloudProviderConfig.ProviderSettings.location}}"
 }

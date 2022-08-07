@@ -174,3 +174,51 @@ Url label: Trace
 Internal link: Tempo
 
 ```
+
+
+## Hetzner cloud volume pattern
+```
+/mnt/HC_Volume_21865747
+
+```
+numbers are the assigned volume ID, you can get it in terraform.
+
+
+
+openssl req -new -newkey rsa:4096 -x509 -sha256 -nodes -out vault.crt -keyout vault.key 
+
+
+
+openssl genrsa -aes256 -out vaultCA.key 2048
+
+
+openssl req -key vaultCA.key -new -out domain.csr
+
+
+
+openssl req -key vaultCA.key rsa:2048 -nodes -keyout domain.key -x509 -days 365 -out domain.crt
+
+Must use Homebrew openssl:
+openssl req -out tls.crt -new -keyout tls.key -newkey rsa:4096 -nodes -sha256 -x509 -subj "/O=HashiCorp/CN=Vault" -addext "subjectAltName = IP:0.0.0.0,DNS:vault.service.consul,DNS:venue-vault-1,DNS:venue-vault-2" -days 3650
+
+88.99.172.159 host_name=venue-vault-1 private_ip=10.0.2.2
+78.46.128.124 host_name=venue-vault-2 private_ip=10.0.2.3
+
+
+# Vault setup
+Generate TLS keys - must be with homebrew or Nix openssl
+
+```
+openssl req -out tls.crt -new -keyout tls.key -newkey rsa:4096 -nodes -sha256 -x509 -subj "/O=HashiCorp/CN=Vault" -addext "subjectAltName = IP:0.0.0.0,DNS:vault.service.consul,DNS:venue-vault-1,DNS:venue-vault-2" -days 3650
+```
+
+run `vault operator init`
+
+run `vault operator unseal` on each vault node  
+
+`vault secrets enable -path=secret/ kv`
+
+Danach:
+
+` vault kv put secret/hello foo=world  `
+` vault kv get secret/hello`
