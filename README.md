@@ -216,6 +216,7 @@ run `vault operator init`
 
 run `vault operator unseal` on each vault node  
 
+To be able to store secrets:
 `vault secrets enable -path=secret/ kv`
 
 Danach:

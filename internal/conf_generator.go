@@ -72,6 +72,7 @@ func GenerateEnvFile(config *Config, targetDir string) error {
 	}
 	consulServer := getHosts(inv, "consul_servers")[0]
 	nomadServer := getHosts(inv, "nomad_servers")[0]
+	vaultServer := getHosts(inv, "vault_servers")[0]
 
 	envFile := fmt.Sprintf(`
 export CONSUL_HTTP_ADDR=https://%s:8501
@@ -80,12 +81,15 @@ export CONSUL_HTTP_SSL=true
 export CONSUL_HTTP_SSL_VERIFY=false
 export CONSUL_CLIENT_CERT=%s/secrets/consul/consul-agent-ca.pem
 export CONSUL_CLIENT_KEY=%s/secrets/consul/consul-agent-ca-key.pem
+
+export VAULT_ADDR=https://%s:8200
+export VAULT_SKIP_VERIFY=true
 	
 export NOMAD_ADDR=https://%s:4646
 export NOMAD_CACERT=%s/secrets/nomad/nomad-ca.pem
 export NOMAD_CLIENT_CERT=%s/secrets/nomad/client.pem
 export NOMAD_CLIENT_KEY=%s/secrets/nomad/client-key.pem	
-`, consulServer, secrets.ConsulBootstrapToken, config.BaseDir, config.BaseDir, nomadServer, config.BaseDir, config.BaseDir, config.BaseDir)
+`, consulServer, secrets.ConsulBootstrapToken, config.BaseDir, config.BaseDir, vaultServer, nomadServer, config.BaseDir, config.BaseDir, config.BaseDir)
 
 	envrcFile := filepath.Join(targetDir, ".envrc")
 	bytesRead, err := ioutil.ReadFile(filepath.Clean(envrcFile))

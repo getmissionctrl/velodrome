@@ -191,6 +191,8 @@ func assertContainsEnv(t *testing.T, config *Config, str string) {
 	assert.Contains(t, str, fmt.Sprintf("export NOMAD_CACERT=%s/secrets/nomad/nomad-ca.pem", config.BaseDir))
 	assert.Contains(t, str, fmt.Sprintf("export NOMAD_CLIENT_CERT=%s/secrets/nomad/client.pem", config.BaseDir))
 	assert.Contains(t, str, fmt.Sprintf("export NOMAD_CLIENT_KEY=%s/secrets/nomad/client-key.pem", config.BaseDir))
+	assert.True(t, containsOneOf(func(s string) string { return fmt.Sprintf("export VAULT_ADDR=https://%s:8200", s) }, str))
+	assert.Contains(t, str, "export VAULT_SKIP_VERIFY=true")
 }
 
 func containsOneOf(format func(string) string, str string) bool {
@@ -198,6 +200,8 @@ func containsOneOf(format func(string) string, str string) bool {
 		"127.0.0.1",
 		"127.0.0.2",
 		"127.0.0.3",
+		"127.0.0.6",
+		"127.0.0.7",
 	}
 	for _, ip := range ips {
 		res := format(ip)

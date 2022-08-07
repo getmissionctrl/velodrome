@@ -1,9 +1,12 @@
 package internal
 
 import (
+	"bytes"
 	"fmt"
 	"math/rand"
 	"os/exec"
+	"runtime"
+	"strings"
 	"time"
 )
 
@@ -33,7 +36,19 @@ func HasDependencies() bool {
 		"vault",
 		"ansible-playbook",
 		"cfssl",
+		"openssl",
 	}
+
+	var b bytes.Buffer
+	if runtime.GOOS == "darwin" {
+		runCmd("", "which openssl", &b)
+		if strings.Contains(b.String(), "/usr/bin/openssl") {
+			fmt.Println("openssl is required, however on MacOS, the default MacOS is not compatible with our requirements. Please install openssl with brew or nix and ensure it is on the PATH")
+			return false
+		}
+	}
+	fmt.Println(runtime.GOOS)
+
 	missing := []string{}
 	for _, v := range dependencies {
 		if !commandExists(v) {
