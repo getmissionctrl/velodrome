@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"os"
@@ -33,7 +32,7 @@ func main() {
 		},
 	}
 
-	rootCmd.AddCommand(sync(), destroy(), observability(), envRC())
+	rootCmd.AddCommand(sync(), observability(), envRC())
 
 	err = rootCmd.Execute()
 	if err != nil {
@@ -117,46 +116,6 @@ func observability() *cobra.Command {
 				fmt.Println(err)
 				os.Exit(1)
 			}
-		},
-	}
-	addFlags(cmd, &configFile)
-
-	return cmd
-}
-
-func destroy() *cobra.Command {
-	var configFile string
-	yes := ""
-	cmd := &cobra.Command{
-		Use:   "destroy",
-		Short: "destroys a cluster",
-		Long:  `destroys a cluster`,
-		Run: func(cmd *cobra.Command, args []string) {
-			var err error
-			text := yes
-			if yes != "yes" {
-				fmt.Println("Are you sure you want to delete all resources? ('yes', or any other input for no)")
-				reader := bufio.NewReader(os.Stdin)
-				text, err = reader.ReadString('\n')
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-			}
-			if text == "yes\n" || text == "yes" {
-				config, err := internal.LoadConfig(configFile)
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-				err = internal.Destroy(filepath.Join(config.BaseDir, "inventory"), config.BaseDir, config.CloudProviderConfig.User)
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-				return
-			}
-			fmt.Println("Delete cancelled")
 		},
 	}
 	addFlags(cmd, &configFile)

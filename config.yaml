@@ -1,5 +1,6 @@
 dc_name: hetzner
-baseDir: config
+base_dir: config
+org_name: chaordic
 
 cluster_config:
   servers: 3 # 3 or 5
@@ -27,3 +28,4 @@ cloud_provider_config:
       network_name: dev_network
     allowed_ips:
     - 85.4.84.201/32
+    - 178.197.225.121/32

@@ -69,6 +69,13 @@ job "demo" {
     task "demo-app" {
       driver = "docker"
 
+      vault {
+        policies = ["backend"]
+
+        change_mode   = "signal"
+        change_signal = "SIGUSR1"
+      }
+
       config {
         image = "wfaler/demo-app:v16"
         ports = ["http", "prometheus"]
@@ -78,17 +85,29 @@ job "demo" {
         PROMETHEUS_PORT = "8090"
       }
 
+//       `access.hcl`
+// ```
+// path "secret/*" { #some path in secrets
+//     capabilities = ["read"]
+// }```
+
+// ```
+// vault policy write backend access.hcl
+// ```
+//consul kv put redis/config/connections 5
+// vault kv put secret/geo-api-key foo=world
       template {
         data = <<EOH
 # Lines starting with a # are ignored
 {{- range service "tempo-grpc" }}
 TEMPO_ENDPOINT="{{ .Address }}:{{ .Port }}"
 {{- end }}
-FOO=bar
+CONNECTIONS="{{key "redis/config/connections"}}"
+API_KEY="{{with secret "secret/data/geo-api-key"}}{{.Data.data.foo}}{{end}}"
       EOH
 //this is how you get consul kv and vault secrets
 #LOG_LEVEL="{{key "service/geo-api/log-verbosity"}}"
-#API_KEY="{{with secret "secret/geo-api-key"}}{{.Data.value}}{{end}}"
+#API_KEY="{{with secret "secret/data/geo-api-key"}}{{.Data.value}}{{end}}"
 
         env         = true
         destination = "/app/env"

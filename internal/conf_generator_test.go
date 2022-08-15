@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/hcl2/hclparse"
 	"github.com/stretchr/testify/assert"
 	"github.com/zclconf/go-cty/cty"
-	"gopkg.in/yaml.v3"
 )
 
 type tfConfig struct {
@@ -236,9 +235,8 @@ func setUpEnvRCTest(t *testing.T, copyEnvRC bool) *Config {
 		S3SecretKey:            "S3_SECRET_KEY",
 		S3AccessKey:            "S3_ACCESS_KEY",
 	}
-	d, err := yaml.Marshal(&secrets)
-	assert.NoError(t, err)
-	err = os.WriteFile(filepath.Join(folder, "secrets", "secrets.yml"), d, 0600)
+
+	err = writeSecrets(folder, secrets)
 	assert.NoError(t, err)
 	return config
 }

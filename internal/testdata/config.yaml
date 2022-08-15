@@ -1,6 +1,7 @@
 dc_name: hetzner
 inventory: datacenters/hetzner/inventory
-baseDir: config
+base_dir: config
+org_name: chaordic
 
 cluster_config:
   servers: 3 # 3 or 5

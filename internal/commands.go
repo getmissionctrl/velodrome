@@ -4,25 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"time"
 )
-
-func Destroy(inventory, baseDir, user string) error {
-	destroy := filepath.Join(baseDir, "destroy.yml")
-	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("ansible-playbook %s -i %s -u %s", destroy, inventory, user)) //nolint
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	err := cmd.Start()
-	if err != nil {
-		return err
-	}
-	err = cmd.Wait()
-
-	return err
-}
 
 func Bootstrap(ctx context.Context, config *Config, configPath string) error {
 	inventory := filepath.Join(config.BaseDir, "inventory")
@@ -71,20 +55,17 @@ func Bootstrap(ctx context.Context, config *Config, configPath string) error {
 	if err != nil {
 		return err
 	}
-	setup := filepath.Join(baseDir, "setup.yml")
+	setup := filepath.Join(baseDir, "base.yml")
 	secrets := filepath.Join(baseDir, "secrets", "secrets.yml")
 	fmt.Println("sleeping 10s to ensure all nodes are available..")
 	time.Sleep(10 * time.Second)
 
-	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s -e @%s", setup, inventory, user, secrets, configPath)) //nolint
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	err = cmd.Start()
+	err = runCmd("", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s -e @%s", setup, inventory, user, secrets, configPath), os.Stdout)
 	if err != nil {
 		return err
 	}
-	err = cmd.Wait()
+	consulSetup := filepath.Join(baseDir, "consul.yml")
+	err = runCmd("", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s -e @%s", consulSetup, inventory, user, secrets, configPath), os.Stdout)
 	if err != nil {
 		return err
 	}
@@ -103,20 +84,30 @@ func Bootstrap(ctx context.Context, config *Config, configPath string) error {
 	}
 	if hasBootstrapped {
 		fmt.Println("Bootstrapped Consul ACL, re-running Ansible...")
-		cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s  -e @%s", setup, inventory, user, secrets, configPath)) //nolint
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-
-		err = cmd.Start()
-		if err != nil {
-			return err
-		}
-		err = cmd.Wait()
+		err = runCmd("", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s -e @%s", consulSetup, inventory, user, secrets, configPath), os.Stdout)
 		if err != nil {
 			return err
 		}
 	}
+	err = generateTLS(config, inv)
+	if err != nil {
+		return err
+	}
 
+	vaultSetup := filepath.Join(baseDir, "vault.yml")
+	err = runCmd("", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s -e @%s", vaultSetup, inventory, user, secrets, configPath), os.Stdout)
+	if err != nil {
+		return err
+	}
+	err = Vault(config, inv)
+	if err != nil {
+		return err
+	}
+
+	nomadSetup := filepath.Join(baseDir, "nomad.yml")
+	err = runCmd("", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s -e @%s", nomadSetup, inventory, user, secrets, configPath), os.Stdout)
+	if err != nil {
+		return err
+	}
 	return Observability(inventory, configPath, baseDir, user)
-
 }

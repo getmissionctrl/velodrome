@@ -49,3 +49,15 @@ telemetry {
   publish_allocation_metrics = true
   publish_node_metrics = true
 }
+
+
+vault {
+  tls_skip_verify = true
+  token = "{{vault.nomad_root_token}}"
+  enabled          = true
+#  ca_path          = "/etc/certs/ca"
+  cert_file        = "/etc/nomad.d/certs/vault/tls.crt"
+  key_file         = "/etc/nomad.d/certs/vault/tls.key"
+  address          = "https://active.vault.service.consul:8200"
+  create_from_role = "nomad-cluster"
+}

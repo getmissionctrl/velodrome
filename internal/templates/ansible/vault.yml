@@ -27,28 +27,28 @@
         mode: 0755
     - name: copy config
       template:
-        src: config.hcl
+        src: vault/config.hcl
         dest: /etc/vault.d/config.hcl
         owner: vault
         group: vault
         mode: 0755
     - name: copy consul agent ca 
       copy:
-        src: config/secrets/consul/consul-agent-ca.pem
+        src: secrets/consul/consul-agent-ca.pem
         dest: /etc/vault.d/certs/consul-agent-ca.pem
         owner: vault
         group: vault
         mode: 0755
     - name: copy consul agent ca 
       copy:
-        src: config/secrets/consul/consul-agent-ca-key.pem
+        src: secrets/consul/consul-agent-ca-key.pem
         dest: /etc/vault.d/certs/consul-agent-ca-key.pem
         owner: vault
         group: vault
         mode: 0755
     - name: copy certificate pem
       copy:
-        src: tls.crt
+        src: secrets/vault/tls.crt
         dest: /etc/vault.d/certs/tls.crt
         owner: vault
         group: vault
@@ -56,8 +56,27 @@
 
     - name: copy key pem
       copy:
-        src: tls.key
+        src: secrets/vault/tls.key
         dest: /etc/vault.d/certs/tls.key
         owner: vault
         group: vault
         mode: 0644
+
+    - name: copy vault service
+      copy:
+        src: vault/vault.service
+        dest: /etc/systemd/system/vault.service
+        mode: 0755
+- hosts: vault_servers
+  become: yes
+  serial: 1  
+  tasks:
+    - name: start vault service on boot
+      ansible.builtin.systemd:
+        enabled: yes
+        name: vault
+    - name: Restart vault service
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: yes
+        name: vault

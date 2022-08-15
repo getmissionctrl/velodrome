@@ -41,7 +41,12 @@ func HasDependencies() bool {
 
 	var b bytes.Buffer
 	if runtime.GOOS == "darwin" {
-		runCmd("", "which openssl", &b)
+		err := runCmd("", "which openssl", &b)
+		if err != nil {
+			fmt.Println("openssl not present")
+			fmt.Println(err)
+			return false
+		}
 		if strings.Contains(b.String(), "/usr/bin/openssl") {
 			fmt.Println("openssl is required, however on MacOS, the default MacOS is not compatible with our requirements. Please install openssl with brew or nix and ensure it is on the PATH")
 			return false

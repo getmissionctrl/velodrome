@@ -111,7 +111,7 @@ func TestMakeSecrets(t *testing.T) {
 	assert.Equal(t, 1, strings.Count(conf, "CONSUL_GOSSIP_KEY"))
 	assert.Equal(t, 1, strings.Count(conf, "NOMAD_GOSSIP_KEY"))
 
-	var theMap map[string]string
+	var theMap map[string]interface{}
 	err = yaml.Unmarshal([]byte(bytes), &theMap)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, theMap["CONSUL_GOSSIP_KEY"])

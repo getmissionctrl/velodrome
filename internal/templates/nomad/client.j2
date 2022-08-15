@@ -55,3 +55,13 @@ plugin "docker" {
     extra_labels = ["job_name", "task_group_name", "task_name", "namespace", "node_name"]
   }
 }
+
+
+vault {
+  tls_skip_verify = true
+  enabled          = true
+#  ca_path          = "/etc/certs/ca"
+#  cert_file        = "/etc/nomad.d/certs/vault/tls.crt"
+#  key_file         = "/etc/nomad.d/certs/vault/tls.key"
+  address          = "https://active.vault.service.consul:8200"
+}

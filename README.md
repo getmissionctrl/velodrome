@@ -209,7 +209,7 @@ openssl req -out tls.crt -new -keyout tls.key -newkey rsa:4096 -nodes -sha256 -x
 Generate TLS keys - must be with homebrew or Nix openssl
 
 ```
-openssl req -out tls.crt -new -keyout tls.key -newkey rsa:4096 -nodes -sha256 -x509 -subj "/O=HashiCorp/CN=Vault" -addext "subjectAltName = IP:0.0.0.0,DNS:vault.service.consul,DNS:venue-vault-1,DNS:venue-vault-2" -days 3650
+openssl req -out tls.crt -new -keyout tls.key -newkey rsa:4096 -nodes -sha256 -x509 -subj "/O=HashiCorp/CN=Vault" -addext "subjectAltName = IP:0.0.0.0,DNS:vault.service.consul,DNS:venue-vault-1,DNS:venue-vault-2"
 ```
 
 run `vault operator init`
@@ -223,3 +223,42 @@ Danach:
 
 ` vault kv put secret/hello foo=world  `
 ` vault kv get secret/hello`
+
+
+
+https://www.cloudflare.com/ips-v6
+https://www.cloudflare.com/ips-v4
+
+
+```
+vault policy write nomad-server internal/templates/vault/nomad-server-policy.hcl
+
+vault token create -policy nomad-server -period 72h -orphan > nomad.txt
+
+vault write /auth/token/roles/nomad-cluster @internal/templates/vault/token-role.json
+```
+
+token into `nomad_root_token` of secrets
+
+
+to make specific app policies:
+
+`access.hcl`
+```
+path "secret/*" { #some path in secrets
+    capabilities = ["read"]
+}```
+
+```
+vault policy write backend access.hcl
+```
+
+in `nomad task definition`:
+```
+      vault {
+        policies = ["backend"] # policy given above
+
+        change_mode   = "signal"
+        change_signal = "SIGUSR1"
+      }
+```

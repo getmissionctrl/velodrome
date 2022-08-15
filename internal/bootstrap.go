@@ -38,6 +38,9 @@ var nomadClientPolicy string
 //go:embed templates/consul/nomad-server-policy.hcl
 var nomadServerPolicy string
 
+//go:embed templates/consul/vault-policy.hcl
+var vaultPolicy string
+
 //go:embed templates/consul/prometheus-policy.hcl
 var prometheusPolicy string
 
@@ -62,11 +65,23 @@ var nomadService string
 //go:embed templates/consul/consul.service
 var consulService string
 
-//go:embed templates/ansible/setup.yml
-var setupAnsible string
+//go:embed templates/vault/vault.service
+var vaultService string
 
-//go:embed templates/ansible/destroy.yml
-var destroyAnsible string
+//go:embed templates/vault/config.hcl
+var vaultConf string
+
+//go:embed templates/ansible/base.yml
+var baseAnsible string
+
+//go:embed templates/ansible/consul.yml
+var consulAnsible string
+
+//go:embed templates/ansible/nomad.yml
+var nomadAnsible string
+
+//go:embed templates/ansible/vault.yml
+var vaultAnsible string
 
 //calculate bootstrap expect from files
 func Configure(inventoryFile, baseDir, dcName string) error {
@@ -76,12 +91,22 @@ func Configure(inventoryFile, baseDir, dcName string) error {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join(baseDir, "setup.yml"), []byte(strings.ReplaceAll(setupAnsible, "dc1", dcName)), 0600)
+	err = os.WriteFile(filepath.Join(baseDir, "base.yml"), []byte(strings.ReplaceAll(baseAnsible, "dc1", dcName)), 0600)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join(baseDir, "destroy.yml"), []byte(destroyAnsible), 0600)
+	err = os.WriteFile(filepath.Join(baseDir, "consul.yml"), []byte(strings.ReplaceAll(consulAnsible, "dc1", dcName)), 0600)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(filepath.Join(baseDir, "nomad.yml"), []byte(strings.ReplaceAll(nomadAnsible, "dc1", dcName)), 0600)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(filepath.Join(baseDir, "vault.yml"), []byte(strings.ReplaceAll(vaultAnsible, "dc1", dcName)), 0600)
 	if err != nil {
 		return err
 	}
@@ -131,7 +156,19 @@ func getSecrets(baseDir string) (*secretsConfig, error) {
 		return nil, err
 	}
 	return &secrets, nil
+}
 
+func writeSecrets(baseDir string, secrets *secretsConfig) error {
+	bytes, err := yaml.Marshal(secrets)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(filepath.Join(baseDir, "secrets", "secrets.yml"), bytes, 0600)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func makeConsulPolicies(inv *aini.InventoryData, baseDir string) error {
@@ -176,6 +213,7 @@ func makeConsulPolicies(inv *aini.InventoryData, baseDir string) error {
 		filepath.Join(baseDir, "consul", "nomad-server-policy.hcl"): nomadServerPolicy,
 		filepath.Join(baseDir, "consul", "prometheus-policy.hcl"):   prometheusPolicy,
 		filepath.Join(baseDir, "consul", "anonymous-policy.hcl"):    anonymousDns,
+		filepath.Join(baseDir, "consul", "vault-policy.hcl"):        vaultPolicy,
 	}
 	for k, v := range toCopy {
 		err = os.WriteFile(k, []byte(v), 0600)
@@ -205,6 +243,19 @@ func getPrivateHosts(inv *aini.InventoryData, group string) []string {
 		if k == group {
 			for _, h := range v.Hosts {
 				hosts = append(hosts, h.Vars["private_ip"])
+			}
+			return hosts
+		}
+	}
+	return hosts
+}
+
+func getPrivateHostNames(inv *aini.InventoryData, group string) []string {
+	hosts := []string{}
+	for k, v := range inv.Groups {
+		if k == group {
+			for _, h := range v.Hosts {
+				hosts = append(hosts, h.Vars["host_name"])
 			}
 			return hosts
 		}
@@ -254,6 +305,10 @@ func makeConfigs(inv *aini.InventoryData, baseDir, dcName string) error {
 	if err != nil {
 		return err
 	}
+	err = os.MkdirAll(filepath.Join(baseDir, "vault"), 0750)
+	if err != nil {
+		return err
+	}
 	nomadServerService := strings.ReplaceAll(nomadService, "nomad_user", "nomad")
 	nomadClientService := strings.ReplaceAll(nomadService, "nomad_user", "root")
 
@@ -267,6 +322,8 @@ func makeConfigs(inv *aini.InventoryData, baseDir, dcName string) error {
 		filepath.Join(baseDir, "nomad", "nomad-server.service"): nomadServerService,
 		filepath.Join(baseDir, "nomad", "nomad-client.service"): nomadClientService,
 		filepath.Join(baseDir, "consul", "consul.service"):      consulService,
+		filepath.Join(baseDir, "vault", "vault.service"):        vaultService,
+		filepath.Join(baseDir, "vault", "config.hcl"):           vaultConf,
 	}
 
 	for k, v := range toWrite {

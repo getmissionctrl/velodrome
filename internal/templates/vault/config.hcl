@@ -6,7 +6,7 @@ storage "consul" {
   tls_key_file = "/etc/vault.d/certs/consul-agent-ca-key.pem"
 
   tls_skip_verify = true
-  token = "{{CONSUL_BOOTSTRAP_TOKEN}}"
+  token = "{{VAULT_CONSUL_TOKEN}}"
 }
 
 listener "tcp" {
@@ -23,3 +23,7 @@ api_addr = "https://{{private_ip}}:8200"
 cluster_addr = "https://{{private_ip}}:8201"
 ui = true
 
+telemetry {
+  disable_hostname = true
+  prometheus_retention_time = "12h"
+}

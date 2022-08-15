@@ -62,7 +62,7 @@
     - name: add loki user
       user: name='loki' groups="loki"  
     - name: download loki
-      ansible.builtin.command: wget https://github.com/grafana/loki/releases/download/v2.5.0/loki-linux-amd64.zip
+      ansible.builtin.command: wget https://github.com/grafana/loki/releases/download/v2.6.1/loki-linux-amd64.zip
     - unarchive:
         src: /root/loki-linux-amd64.zip
         dest: /usr/local/bin/

@@ -1,0 +1,171 @@
+---
+- hosts: clients
+  become: yes
+  tasks:
+    - name: Creates config dir
+      file:
+        path: /etc/nomad.d
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+    - name: Creates certs dir
+      file:
+        path: /etc/nomad.d/certs
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+    - name: Creates vault certs dir
+      file:
+        path: /etc/nomad.d/certs/vault
+        state: directory
+        owner: nomad
+        group: nomad
+        mode: 0755
+
+    - name: copy vault pem
+      copy:
+        src: secrets/vault/tls.key
+        dest: /etc/nomad.d/certs/vault/tls.key
+        owner: vault
+        group: vault
+        mode: 0644
+
+    - name: copy vault crt
+      copy:
+        src: secrets/vault/tls.crt
+        dest: /etc/nomad.d/certs/vault/tls.crt
+        owner: vault
+        group: vault
+        mode: 0644
+
+    - name: Creates data dir
+      file:
+        path: /opt/nomad
+        state: directory
+        owner: root
+        group: root
+        mode: 0700
+    - name: copy nomad ca
+      copy:
+        src: secrets/nomad/nomad-ca.pem
+        dest: /etc/nomad.d/certs/nomad-ca.pem
+        owner: root
+        group: root
+        mode: 0755
+    - name: copy client.pem
+      copy:
+        src: secrets/nomad/client.pem
+        dest: /etc/nomad.d/certs/client.pem
+        owner: root
+        group: root
+        mode: 0755
+    - name: copy client-key.pem
+      copy:
+        src: secrets/nomad/client-key.pem
+        dest: /etc/nomad.d/certs/client-key.pem
+        owner: root
+        group: root
+        mode: 0755
+    - name: copy config
+      template:
+        src: nomad/client.j2
+        dest: /etc/nomad.d/nomad.hcl
+        owner: root
+        group: root
+        mode: 0755
+    - name: copy service
+      copy:
+        src: nomad/nomad-client.service
+        dest: /etc/systemd/system/nomad.service
+        mode: 0755
+
+- hosts: nomad_servers
+  become: yes
+
+  tasks:
+    - name: Creates config dir
+      file:
+        path: /etc/nomad.d
+        state: directory
+        owner: nomad
+        group: nomad
+        mode: 0755
+    - name: Creates certs dir
+      file:
+        path: /etc/nomad.d/certs
+        state: directory
+        owner: nomad
+        group: nomad
+        mode: 0755
+    - name: Creates vault certs dir
+      file:
+        path: /etc/nomad.d/certs/vault
+        state: directory
+        owner: nomad
+        group: nomad
+        mode: 0755
+
+    - name: copy vault pem
+      copy:
+        src: secrets/vault/tls.key
+        dest: /etc/nomad.d/certs/vault/tls.key
+        owner: vault
+        group: vault
+        mode: 0644
+
+    - name: copy vault crt
+      copy:
+        src: secrets/vault/tls.crt
+        dest: /etc/nomad.d/certs/vault/tls.crt
+        owner: vault
+        group: vault
+        mode: 0644
+
+    - name: Creates data dir
+      file:
+        path: /opt/nomad
+        state: directory
+        owner: nomad
+        group: nomad
+        mode: 0755
+    - name: copy nomad ca
+      copy:
+        src: secrets/nomad/nomad-ca.pem
+        dest: /etc/nomad.d/certs/nomad-ca.pem
+        mode: 0755
+    - name: copy server.pem
+      copy:
+        src: secrets/nomad/server.pem
+        dest: /etc/nomad.d/certs/server.pem
+        mode: 0755
+    - name: copy server-key.pem
+      copy:
+        src: secrets/nomad/server-key.pem
+        dest: /etc/nomad.d/certs/server-key.pem
+        mode: 0755
+    - name: copy config
+      template:
+        src: nomad/server.j2
+        dest: /etc/nomad.d/nomad.hcl
+        mode: 0755
+    - name: copy service
+      copy:
+        src: nomad/nomad-server.service
+        dest: /etc/systemd/system/nomad.service
+        mode: 0755
+   ### nomad clients and servers   
+- hosts: nomad_servers:clients 
+  become: yes
+  serial: 1  
+  tasks:
+    - name: start nomad service on boot
+      ansible.builtin.systemd:
+        enabled: yes
+        name: nomad
+    - name: Restart nomad service
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: yes
+        name: nomad

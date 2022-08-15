@@ -12,7 +12,8 @@ import (
 
 type Config struct {
 	DC                  string              `yaml:"dc_name"`
-	BaseDir             string              `yaml:"baseDir"`
+	BaseDir             string              `yaml:"base_dir"`
+	OrgName             string              `yaml:"org_name`
 	CloudProviderConfig CloudProvider       `yaml:"cloud_provider_config"`
 	ClusterConfig       ClusterConfig       `yaml:"cluster_config"`
 	ObservabilityConfig ObservabilityConfig `yaml:"observability_config"`
@@ -53,16 +54,24 @@ type HetznerSettings struct {
 }
 
 type secretsConfig struct {
-	ConsulGossipKey        string `yaml:"CONSUL_GOSSIP_KEY"`
-	NomadGossipKey         string `yaml:"NOMAD_GOSSIP_KEY"`
-	NomadClientConsulToken string `yaml:"NOMAD_CLIENT_CONSUL_TOKEN"`
-	NomadServerConsulToken string `yaml:"NOMAD_SERVER_CONSUL_TOKEN"`
-	ConsulAgentToken       string `yaml:"CONSUL_AGENT_TOKEN"`
-	ConsulBootstrapToken   string `yaml:"CONSUL_BOOTSTRAP_TOKEN"`
-	PrometheusConsulToken  string `yaml:"PROMETHEUS_CONSUL_TOKEN"`
-	S3Endpoint             string `yaml:"s3_endpoint"`
-	S3AccessKey            string `yaml:"s3_access_key"`
-	S3SecretKey            string `yaml:"s3_secret_key"`
+	ConsulGossipKey        string       `yaml:"CONSUL_GOSSIP_KEY"`
+	NomadGossipKey         string       `yaml:"NOMAD_GOSSIP_KEY"`
+	NomadClientConsulToken string       `yaml:"NOMAD_CLIENT_CONSUL_TOKEN"`
+	NomadServerConsulToken string       `yaml:"NOMAD_SERVER_CONSUL_TOKEN"`
+	ConsulAgentToken       string       `yaml:"CONSUL_AGENT_TOKEN"`
+	ConsulBootstrapToken   string       `yaml:"CONSUL_BOOTSTRAP_TOKEN"`
+	PrometheusConsulToken  string       `yaml:"PROMETHEUS_CONSUL_TOKEN"`
+	VaultConsulToken       string       `yaml:"VAULT_CONSUL_TOKEN"`
+	S3Endpoint             string       `yaml:"s3_endpoint"`
+	S3AccessKey            string       `yaml:"s3_access_key"`
+	S3SecretKey            string       `yaml:"s3_secret_key"`
+	VaultConfig            vaultSecrets `yaml:"vault"`
+}
+
+type vaultSecrets struct {
+	RootToken      string   `yaml:"root_token"`
+	UnsealKeys     []string `yaml:"unseal_keys"`
+	NomadRootToken string   `yaml:"nomad_root_token"`
 }
 
 type TFVarsConfig struct {

@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/relex/aini"
-	"gopkg.in/yaml.v3"
 )
 
 func parseConsulToken(file string) (string, error) {
@@ -63,6 +61,7 @@ func BootstrapConsul(consul Consul, inventory *aini.InventoryData, baseDir strin
 		"nomad-server":       filepath.Join(baseDir, "consul", "nomad-server-policy.hcl"),
 		"prometheus":         filepath.Join(baseDir, "consul", "prometheus-policy.hcl"),
 		"anonymous-dns-read": filepath.Join(baseDir, "consul", "anonymous-policy.hcl"),
+		"vault":              filepath.Join(baseDir, "consul", "vault-policy.hcl"),
 	}
 
 	for k, v := range policies {
@@ -82,6 +81,7 @@ func BootstrapConsul(consul Consul, inventory *aini.InventoryData, baseDir strin
 		"client token":       "nomad-client",
 		"nomad server token": "nomad-server",
 		"prometheus token":   "prometheus",
+		"vault token":        "vault",
 	}
 	tokens := map[string]string{}
 
@@ -97,12 +97,9 @@ func BootstrapConsul(consul Consul, inventory *aini.InventoryData, baseDir strin
 	secrets.NomadClientConsulToken = tokens["nomad-client"]
 	secrets.NomadServerConsulToken = tokens["nomad-server"]
 	secrets.PrometheusConsulToken = tokens["prometheus"]
+	secrets.VaultConsulToken = tokens["vault"]
 
-	d, err := yaml.Marshal(&secrets)
-	if err != nil {
-		return false, err
-	}
-	err = os.WriteFile(filepath.Join(baseDir, "secrets", "secrets.yml"), d, 0600)
+	err = writeSecrets(baseDir, secrets)
 
 	return true, err
 }
