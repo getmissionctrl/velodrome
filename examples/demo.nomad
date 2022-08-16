@@ -85,15 +85,7 @@ job "demo" {
         PROMETHEUS_PORT = "8090"
       }
 
-//       `access.hcl`
-// ```
-// path "secret/*" { #some path in secrets
-//     capabilities = ["read"]
-// }```
-
-// ```
 // vault policy write backend access.hcl
-// ```
 //consul kv put redis/config/connections 5
 // vault kv put secret/geo-api-key foo=world
       template {
@@ -105,9 +97,7 @@ TEMPO_ENDPOINT="{{ .Address }}:{{ .Port }}"
 CONNECTIONS="{{key "redis/config/connections"}}"
 API_KEY="{{with secret "secret/data/geo-api-key"}}{{.Data.data.foo}}{{end}}"
       EOH
-//this is how you get consul kv and vault secrets
-#LOG_LEVEL="{{key "service/geo-api/log-verbosity"}}"
-#API_KEY="{{with secret "secret/data/geo-api-key"}}{{.Data.value}}{{end}}"
+
 
         env         = true
         destination = "/app/env"

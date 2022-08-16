@@ -66,7 +66,7 @@ func Vault(config *Config, inventory *aini.InventoryData) error {
 	if err != nil {
 		return err
 	}
-	if _, err := os.Stat(filepath.Clean(initFile)); errors.Is(err, os.ErrNotExist) {
+	if _, e := os.Stat(filepath.Clean(initFile)); errors.Is(e, os.ErrNotExist) {
 
 		secrets, err = initVault(config.BaseDir, initFile, vaultHosts, secrets)
 		if err != nil {
@@ -149,7 +149,7 @@ func unseal(baseDir string, vaultHosts []string, secrets *secretsConfig, init bo
 		if err != nil {
 			return err
 		}
-		bytes, err := ioutil.ReadFile(filepath.Join(baseDir, "secrets", "vault", "nomad-token.txt"))
+		bytes, err := ioutil.ReadFile(filepath.Clean(filepath.Join(baseDir, "secrets", "vault", "nomad-token.txt")))
 		if err != nil {
 			return err
 		}
@@ -184,7 +184,7 @@ func isVaultUnsealed(bytes []byte) bool {
 	return true
 }
 
-func parseVaultInit(initFile string, secrets *secretsConfig) (*secretsConfig, error) {
+func parseVaultInit(initFile string, secrets *secretsConfig) (*secretsConfig, error) { //nolint
 	content, err := ioutil.ReadFile(filepath.Clean(initFile))
 	if err != nil {
 		log.Fatal(err)

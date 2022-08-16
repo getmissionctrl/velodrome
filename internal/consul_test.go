@@ -43,9 +43,9 @@ func TestBootstrapConsul(t *testing.T) {
 	b, err := BootstrapConsul(consul, inv, folder)
 	assert.NoError(t, err)
 	assert.True(t, b)
-	assert.Equal(t, 5, len(consul.RegisterPolicyCalls()))
+	assert.Equal(t, 6, len(consul.RegisterPolicyCalls()))
 
-	assert.Equal(t, 4, len(consul.RegisterACLCalls()))
+	assert.Equal(t, 5, len(consul.RegisterACLCalls()))
 	newSecrets, err := getSecrets(folder)
 	assert.NoError(t, err)
 

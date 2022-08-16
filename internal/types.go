@@ -13,7 +13,7 @@ import (
 type Config struct {
 	DC                  string              `yaml:"dc_name"`
 	BaseDir             string              `yaml:"base_dir"`
-	OrgName             string              `yaml:"org_name`
+	OrgName             string              `yaml:"org_name"`
 	CloudProviderConfig CloudProvider       `yaml:"cloud_provider_config"`
 	ClusterConfig       ClusterConfig       `yaml:"cluster_config"`
 	ObservabilityConfig ObservabilityConfig `yaml:"observability_config"`
