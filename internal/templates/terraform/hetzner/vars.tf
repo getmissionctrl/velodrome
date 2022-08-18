@@ -57,6 +57,13 @@ variable "allow_ips" {
   ]
 }
 
+variable "https_allowed_ips" {
+  type = list
+  default = [{{ range $key, $value := .CloudProviderConfig.ProviderSettings.https_allowed_ips}}
+   "{{ $value }}",{{ end }}
+  ]
+}
+
 variable "server_type"{
   type = string
   default = "{{.CloudProviderConfig.ProviderSettings.server_type}}"

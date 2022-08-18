@@ -59,7 +59,7 @@ func TestGenerateTerraform(t *testing.T) {
 		assert.NoError(t, e)
 	}()
 
-	err = GenerateTerraform(config)
+	err = GenerateTerraform(config, &CloudflareIPs{})
 	assert.NoError(t, err)
 
 	parser := hclparse.NewParser()

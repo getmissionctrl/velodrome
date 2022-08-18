@@ -14,7 +14,11 @@ func Bootstrap(ctx context.Context, config *Config, configPath string) error {
 	user := config.CloudProviderConfig.User
 	baseDir := config.BaseDir
 
-	err := GenerateTerraform(config)
+	ips, err := GetCloudflareIPs(ctx)
+	if err != nil {
+		return err
+	}
+	err = GenerateTerraform(config, ips)
 	if err != nil {
 		return err
 	}

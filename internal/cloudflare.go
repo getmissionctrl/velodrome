@@ -8,12 +8,12 @@ import (
 	"strings"
 )
 
-type cloudflareIps struct {
+type CloudflareIPs struct {
 	IPV4 []string
 	IPV6 []string
 }
 
-func GetCloudflareIPs(ctx context.Context) (*cloudflareIps, error) {
+func GetCloudflareIPs(ctx context.Context) (*CloudflareIPs, error) {
 	client := &http.Client{}
 	req, err := http.NewRequestWithContext(ctx, "GET", "https://www.cloudflare.com/ips-v6", nil)
 	if err != nil {
@@ -41,7 +41,6 @@ func GetCloudflareIPs(ctx context.Context) (*cloudflareIps, error) {
 	}()
 
 	if ipv4Resp.StatusCode != 200 || ipv6Resp.StatusCode != 200 {
-
 		return nil, fmt.Errorf("cloudflare IP endpoints could not be reached: %s, %s", ipv4Resp.Status, ipv6Resp.Status)
 	}
 
@@ -54,13 +53,12 @@ func GetCloudflareIPs(ctx context.Context) (*cloudflareIps, error) {
 		return nil, err
 	}
 
-	ips := cloudflareIps{}
+	ips := CloudflareIPs{}
 	ipv6str := string(b)
 	ipv6Lines := strings.Split(ipv6str, "\n")
 	ips.IPV6 = append(ips.IPV6, ipv6Lines...)
 
 	ipv4str := string(b2)
-	fmt.Println(ipv4str)
 	ipv4Lines := strings.Split(ipv4str, "\n")
 	ips.IPV4 = append(ips.IPV4, ipv4Lines...)
 

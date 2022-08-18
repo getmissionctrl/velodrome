@@ -18,7 +18,7 @@ var hetznerMain string
 //go:embed templates/terraform/hetzner/vars.tf
 var hetznerVars string
 
-func GenerateTerraform(config *Config) error {
+func GenerateTerraform(config *Config, ips *CloudflareIPs) error {
 	settings := map[string]struct {
 		Main string
 		Vars string
@@ -39,6 +39,13 @@ func GenerateTerraform(config *Config) error {
 		return e
 	}
 	var buf bytes.Buffer
+
+	allowedIps := []string{}
+
+	allowedIps = append(allowedIps, ips.IPV4...)
+	allowedIps = append(allowedIps, ips.IPV6...)
+
+	config.CloudProviderConfig.ProviderSettings["https_allowed_ips"] = allowedIps
 
 	err := tmpl.Execute(&buf, config)
 	if err != nil {
