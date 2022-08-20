@@ -6,7 +6,17 @@ cluster_config:
   servers: 3 # 3 or 5
   clients: 2
   vault_servers: 2
+  consul_volume_size: 11
   separate_consul_servers: false
+  client_volumes:
+  - name: "data_vol"
+    client: "1"
+    path: /opt/nomad_client/data
+    size: 20
+  # host_volume "mysql" {
+  #   path      = "/opt/mysql/data"
+  #   read_only = false
+  # }
 
 observability_config:
   multi_instance: false # sets all on 1 server if false, 4 separate if true
@@ -16,6 +26,7 @@ observability_config:
 cloud_provider_config:
   internal_network_interface_name: ens10
   sudo_user: root
+  sudo_dir: /root
   provider: hetzner
   provider_settings:
     location: nbg1

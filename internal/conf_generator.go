@@ -135,6 +135,14 @@ func GenerateInventory(config *Config) error {
 	if len(inventory.ConsulServers.Value) == 0 {
 		inventory.ConsulServers.Value = inventory.NomadServers.Value
 	}
+	for i, v := range inventory.ConsulServers.Value {
+		for k, mount := range inventory.ConsulVolumes.Value {
+			match := fmt.Sprintf("server_id=%v", k)
+			if strings.Contains(v, match) {
+				inventory.ConsulServers.Value[i] = strings.Replace(v, match, fmt.Sprintf("consul_mount=%v", mount), 1)
+			}
+		}
+	}
 
 	takeFirst := len(inventory.ObservabilityServers.Value) == 1
 	if takeFirst {
@@ -199,6 +207,7 @@ type InventoryJson struct {
 	ObservabilityServers InvValue `json:"o11y_servers"`
 	VaultServers         InvValue `json:"vault_servers"`
 	ConsulServers        InvValue `json:"consul_servers"`
+	ConsulVolumes        InvMap   `json:"consul_volumes"`
 	prometheusServers    []string
 	grafanaServers       []string
 	lokiServers          []string
@@ -206,4 +215,7 @@ type InventoryJson struct {
 }
 type InvValue struct {
 	Value []string `json:"value"`
+}
+type InvMap struct {
+	Value map[string]string `json:"value"`
 }

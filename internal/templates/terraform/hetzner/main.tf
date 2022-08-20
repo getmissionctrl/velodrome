@@ -15,6 +15,7 @@ provider "hcloud" {
 locals {
   # Common tags to be assigned to all resources
 
+  consul_group = var.separate_consul_servers ? "consul" : "nomad-server"
   groups = {
     consul = {
       count = var.separate_consul_servers ? var.server_count : 0 * var.server_count, subnet = "0", group = 0
@@ -40,6 +41,7 @@ locals {
         private_ip = "10.0.${value.subnet}.${i + 2}",
         name       = "${var.base_server_name}-${name}-${i + 1}",
         group      = value.group
+        index = i
       }
     ]
   ])
@@ -129,11 +131,34 @@ resource "hcloud_server_network" "network_binding" {
 }
 
 
+resource "hcloud_volume" "consul" {
+  count = var.server_count
+  location = var.location
+  name      = "consul-${count.index}"
+  size     = var.consul_volume_size
+  format    = "ext4"
+  depends_on = [
+    hcloud_server.server_node 
+  ]
+}
+
+resource "hcloud_volume_attachment" "consul" {
+  for_each = {for key, val in local.servers: val.index => val.name if val.group_name == local.consul_group}
+  volume_id = hcloud_volume.consul[each.key].id
+  server_id = hcloud_server.server_node[each.value].id
+  automount = true
+
+  depends_on = [
+    hcloud_volume.consul 
+  ]
+}
+
+
 output "consul_servers" {
   value = flatten([
     for index, node in hcloud_server.server_node : [
       for server in local.servers :
-      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip}" if server.name == node.name
+      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip} server_id=${node.id}" if server.name == node.name
     ] if node.labels["group"] == "consul"
   ])
 }
@@ -142,7 +167,7 @@ output "nomad_servers" {
   value = flatten([
     for index, node in hcloud_server.server_node : [
       for server in local.servers :
-      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip}" if server.name == node.name
+      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip} server_id=${node.id}" if server.name == node.name
     ] if node.labels["group"] == "nomad-server"
   ])
 }
@@ -151,7 +176,7 @@ output "vault_servers" {
   value = flatten([
     for index, node in hcloud_server.server_node : [
       for server in local.servers :
-      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip}" if server.name == node.name
+      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip} server_id=${node.id}" if server.name == node.name
     ] if node.labels["group"] == "vault"
   ])
 }
@@ -160,7 +185,7 @@ output "client_servers" {
   value = flatten([
     for index, node in hcloud_server.server_node : [
       for server in local.servers :
-      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip}" if server.name == node.name
+      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip} server_id=${node.id}" if server.name == node.name
     ] if node.labels["group"] == "client"
   ])
 }
@@ -169,7 +194,12 @@ output "o11y_servers" {
   value = flatten([
     for index, node in hcloud_server.server_node : [
       for server in local.servers :
-      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip}" if server.name == node.name
+      "${node.ipv4_address} host_name=${node.name} private_ip=${server.private_ip} server_id=${node.id}" if server.name == node.name
     ] if node.labels["group"] == "observability"
   ])
 }
+
+output "consul_volumes" {
+  value = {for index, attachment in hcloud_volume_attachment.consul: attachment.server_id => "/mnt/HC_Volume_${attachment.volume_id}"}
+}
+

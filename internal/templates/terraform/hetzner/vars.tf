@@ -8,6 +8,13 @@ variable "server_count" {
   default = {{.ClusterConfig.Servers}}
 }
 
+variable "consul_volume_size" {
+  type = number
+  default = {{.ClusterConfig.ConsulVolumeSize}}
+}
+
+
+
 variable "client_count" {
   type = number
   default = {{.ClusterConfig.Clients}}

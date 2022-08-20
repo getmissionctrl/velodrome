@@ -64,7 +64,7 @@
     - name: download loki
       ansible.builtin.command: wget https://github.com/grafana/loki/releases/download/v2.6.1/loki-linux-amd64.zip
     - unarchive:
-        src: /root/loki-linux-amd64.zip
+        src: '{{cloud_provider_config.sudo_dir}}/loki-linux-amd64.zip'
         dest: /usr/local/bin/
         remote_src: True
         mode: 0755
@@ -150,7 +150,7 @@
     - name: copy install script for prometheus
       copy:
         src: prometheus/install-prometheus.sh
-        dest: /root/install-prometheus.sh
+        dest: '{{cloud_provider_config.sudo_dir}}/install-prometheus.sh'
         mode: 0755
     - name: install prometheus
       ansible.builtin.command: ./install-prometheus.sh
@@ -181,7 +181,7 @@
     - name: copy loki script
       copy:
         src: loki/setup-loki-agent.sh
-        dest: /root/setup-loki-agent.sh
+        dest: '{{cloud_provider_config.sudo_dir}}/setup-loki-agent.sh'
         mode: 0755
     - name: install Loki agent
       ansible.builtin.command: ./setup-loki-agent.sh
@@ -217,7 +217,7 @@
     - name: copy tempo script
       copy:
         src: tempo/setup-tempo.sh
-        dest: /root/setup-tempo.sh
+        dest: '{{cloud_provider_config.sudo_dir}}/setup-tempo.sh'
         mode: 0755
     - name: install tempo agent
       ansible.builtin.command: ./setup-tempo.sh

@@ -22,12 +22,14 @@ type Config struct {
 type ClusterConfig struct {
 	Servers               int  `yaml:"servers"`
 	Clients               int  `yaml:"clients"`
+	ConsulVolumeSize      int  `yaml:"consul_volume_size"`
 	VaultServers          int  `yaml:"vault_servers"`
 	SeparateConsulServers bool `yaml:"separate_consul_servers"`
 }
 
 type CloudProvider struct {
 	User             string                 `yaml:"sudo_user"`
+	Dir              string                 `yaml:"sudo_dir"`
 	NetworkInterface string                 `yaml:"internal_network_interface_name"`
 	Provider         string                 `yaml:"provider"`
 	ProviderSettings map[string]interface{} `yaml:"provider_settings"`
