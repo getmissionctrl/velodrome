@@ -10,13 +10,13 @@ clients:
     batchwait: 5s
 
 scrape_configs:
-# - job_name: system
-#   static_configs:
-#   - targets:
-#       - localhost
-#     labels:
-#       job: varlogs
-#       __path__: /var/log/*log
+- job_name: nomad
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+      job: nomad
+      __path__: /var/log/nomad/nomad.log
 - job_name: containers
   static_configs:
   - targets:

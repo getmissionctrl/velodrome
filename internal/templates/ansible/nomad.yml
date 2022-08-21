@@ -2,6 +2,13 @@
 - hosts: clients
   become: yes
   tasks:
+    - name: Creates log dir
+      file:
+        path: /var/log/nomad
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
     - name: Creates config dir
       file:
         path: /etc/nomad.d
@@ -83,8 +90,14 @@
 
 - hosts: nomad_servers
   become: yes
-
   tasks:
+    - name: Creates log dir
+      file:
+        path: /var/log/nomad
+        state: directory
+        owner: nomad
+        group: nomad
+        mode: 0755
     - name: Creates config dir
       file:
         path: /etc/nomad.d

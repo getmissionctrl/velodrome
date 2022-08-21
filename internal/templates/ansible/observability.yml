@@ -175,7 +175,7 @@
         state: restarted
         daemon_reload: yes
         name:  prometheus.service
-- hosts: clients
+- hosts: clients,nomad_servers
   become: yes
   tasks:
     - name: copy loki script
