@@ -22,7 +22,6 @@
         group: consul
 - hosts: all 
   become: yes
-
   tasks:
     # - name: Set authorized key taken from file
     #   authorized_key:
@@ -69,6 +68,7 @@
         - docker-compose-plugin
         - software-properties-common
         - apt-transport-https
+        - prometheus-node-exporter-collectors
     - name: add group consul
       group: name='consul'
     - name: add consul user
@@ -137,3 +137,13 @@
       ansible.builtin.command: tar -C /opt/cni/bin -xzf cni-plugins.tgz
     - name: setup CNI plugin
       ansible.builtin.command: echo 1 | sudo tee /proc/sys/net/bridge/bridge-nf-call-arptables && echo 1 | sudo tee /proc/sys/net/bridge/bridge-nf-call-ip6tables && echo 1 | sudo tee /proc/sys/net/bridge/bridge-nf-call-iptables
+    - name: start node-exporter on boot
+      ansible.builtin.systemd:
+        enabled: yes
+        name: prometheus-node-exporter
+    - name: Restart node-exporter service
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: yes
+        name: prometheus-node-exporter
+ 

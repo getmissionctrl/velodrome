@@ -40,6 +40,15 @@ scrape_configs:
     static_configs:
     - targets:{{ range $key, $value := .NomadHosts }}
       - {{$value}}:4646{{ end }}
+  - job_name: integrations/node_exporter
+    metrics_path: /metrics
+    scheme: http
+    params:
+      format:
+      - prometheus
+    static_configs:
+    - targets:{{ range $key, $value := .AllHosts }}
+      - {{$value}}:9100{{ end }}
   - job_name: integrations/consul
     metrics_path: /metrics
     params:

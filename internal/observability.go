@@ -134,6 +134,21 @@ func mkObservabilityConfigs(consul Consul, inv *aini.InventoryData, baseDir stri
 	clients := getPrivateHosts(inv, "clients")
 	consulServers := getPrivateHosts(inv, "consul_servers")
 	nomadServers := getPrivateHosts(inv, "nomad_servers")
+	vaultServers := getPrivateHosts(inv, "vault_servers")
+	tempo := getPrivateHosts(inv, "tempo")
+	prometheus := getPrivateHosts(inv, "prometheus")
+	loki := getPrivateHosts(inv, "loki")
+	grafana := getPrivateHosts(inv, "grafana")
+	allObs := append(append(append(tempo, prometheus...), loki...), grafana...)
+
+	obsKV := make(map[string]string)
+	for _, server := range allObs {
+		obsKV[server] = server
+	}
+	observabilityServers := []string{}
+	for k, _ := range obsKV {
+		observabilityServers = append(observabilityServers, k)
+	}
 
 	tmpl, e := template.New("consul-policies").Parse(prometheusYml)
 	if e != nil {
@@ -144,6 +159,7 @@ func mkObservabilityConfigs(consul Consul, inv *aini.InventoryData, baseDir stri
 	err := tmpl.Execute(&buf, map[string]interface{}{
 		"ConsulHosts": append(clients, consulServers...),
 		"NomadHosts":  append(clients, nomadServers...),
+		"AllHosts":    append(append(append(append(clients, nomadServers...), consulServers...), vaultServers...), observabilityServers...),
 		"ConsulToken": "{{PROMETHEUS_CONSUL_TOKEN}}",
 	})
 	if err != nil {

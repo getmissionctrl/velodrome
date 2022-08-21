@@ -64,6 +64,12 @@ func Bootstrap(ctx context.Context, config *Config, configPath string) error {
 	fmt.Println("sleeping 10s to ensure all nodes are available..")
 	time.Sleep(10 * time.Second)
 
+	//ansible-galaxy install deekayen.awscli2
+	// err = runCmd("", "ansible-galaxy install cloudalchemy.node_exporter", os.Stdout)
+	// if err != nil {
+	// 	return err
+	// }
+
 	err = runCmd("", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s -e @%s", setup, inventory, user, secrets, configPath), os.Stdout)
 	if err != nil {
 		return err
