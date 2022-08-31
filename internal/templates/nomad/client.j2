@@ -19,8 +19,17 @@ client {
     path = "/var/run/docker.sock"
     read_only = true
   }
+
+  {% for volume in mounts %}
+  host_volume "{{volume.name}}" {
+    path      = "{{volume.path}}"
+    read_only = false
+  }
+  {% endfor %}
   network_interface = "{{cloud_provider_config.internal_network_interface_name}}"
 }
+
+
 
 # Require TLS
 tls {

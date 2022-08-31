@@ -1,0 +1,7 @@
+registry.consul.token = {{FABIO_CONSUL_TOKEN}}
+
+ui.access = ro
+
+proxy.cs=cs=rootcs;type=file;cert=/etc/fabio.d/server.crt;key=/etc/fabio.d/server.key;#clientca=/etc/fabio.d/cacert.pem
+proxy.addr = :443;cs=rootcs
+proxy.auth = name=consul-auth;type=basic;file=/etc/fabio.d/consul.htpasswd;

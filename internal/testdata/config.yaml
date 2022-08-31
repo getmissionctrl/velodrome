@@ -22,7 +22,9 @@ cloud_provider_config:
     location: nbg1
     ssh_keys:
     - wille.faler@gmail.com
-    server_type: cx21
+    server_instance_type: cx21
+    client_instance_type: cx21
+    observability_instance_type: cx21
     resource_names:
       base_server_name: nomad-srv
       firewall_name: dev_firewall

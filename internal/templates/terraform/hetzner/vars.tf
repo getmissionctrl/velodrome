@@ -13,8 +13,6 @@ variable "consul_volume_size" {
   default = {{.ClusterConfig.ConsulVolumeSize}}
 }
 
-
-
 variable "client_count" {
   type = number
   default = {{.ClusterConfig.Clients}}
@@ -29,6 +27,19 @@ variable "separate_consul_servers"{
   type = bool
   default = {{.ClusterConfig.SeparateConsulServers}}
 }
+
+variable "client_volumes" {
+  type = list
+  default = [{{ range $key, $value := .ClusterConfig.ClientVolumes}}
+   {
+    name = "{{ $value.Name }}"
+    client = "{{ $value.Client}}"
+    path = "{{ $value.Path}}"
+    size = {{ $value.Size }}
+   },{{ end }}
+  ]
+}
+
 
 variable "multi_instance_observability" {
   type = bool
@@ -71,9 +82,19 @@ variable "https_allowed_ips" {
   ]
 }
 
-variable "server_type"{
+variable "server_instance_type"{
   type = string
-  default = "{{.CloudProviderConfig.ProviderSettings.server_type}}"
+  default = "{{.CloudProviderConfig.ProviderSettings.server_instance_type}}"
+}
+
+variable "client_instance_type"{
+  type = string
+  default = "{{.CloudProviderConfig.ProviderSettings.client_instance_type}}"
+}
+
+variable "observability_instance_type"{
+  type = string
+  default = "{{.CloudProviderConfig.ProviderSettings.observability_instance_type}}"
 }
 variable "location"{
   type = string

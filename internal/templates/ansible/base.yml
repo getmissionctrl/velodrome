@@ -1,25 +1,30 @@
 ---
-- hosts: consul_servers
+- hosts: consul_servers,clients
   become: yes
   tasks:
+    - name: "Ansible | List all known variables and facts"
+      debug:
+        var: hostvars[inventory_hostname]
     - name: add group consul
       group: name='consul'
     - name: add consul user
       user: name='consul' groups="consul"
     - name: Creates data dir
       file:
-        path: '{{consul_mount}}/consul'
+        path: '{{item["mount_path"]}}/{{item["name"]}}'
         state: directory
-        owner: consul
-        group: consul
+        owner: "{{item['owner']}}"
+        group: "{{item['owner']}}"
         mode: 0755
+      loop: "{{ mounts }}"
     - name: links data dir
       file:
-        src: '{{consul_mount}}/consul'
-        dest: /opt/consul
+        src: '{{item["mount_path"]}}/{{item["name"]}}'
+        dest: "{{item['path']}}"
         state: link
-        owner: consul
-        group: consul
+        owner: "{{item['owner']}}"
+        group: "{{item['owner']}}"
+      loop: "{{ mounts }}"
 - hosts: all 
   become: yes
   tasks:

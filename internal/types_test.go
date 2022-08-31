@@ -40,10 +40,12 @@ func TestLoadProviderConfig(t *testing.T) {
 	hetzner := provider.ProviderConfig.(HetznerSettings)
 
 	expected := HetznerSettings{
-		AllowedIPs: []string{"85.4.84.201/32"},
-		SSHKeys:    []string{"wille.faler@gmail.com"},
-		ServerType: "cx21",
-		Location:   "nbg1",
+		AllowedIPs:                []string{"85.4.84.201/32"},
+		SSHKeys:                   []string{"wille.faler@gmail.com"},
+		ServerInstanceType:        "cx21",
+		ClientInstanceType:        "cx21",
+		ObservabilityInstanceType: "cx21",
+		Location:                  "nbg1",
 		ResourceNames: HetznerResourceNames{
 			BaseServerName: "nomad-srv",
 			FirewallName:   "dev_firewall",

@@ -46,3 +46,4 @@ grafana-agent.sh
 bazel-*
 coverage.out
 .vscode
+certs/

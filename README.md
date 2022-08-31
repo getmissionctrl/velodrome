@@ -83,13 +83,13 @@ Run ansible:
     - [x] Add configs to cluster
     - [x] Systemctl scripts and startup
 - [x] Nomad & consul bootstrap expects based on inventory 
-- [ ] Vault setup
-    - [ ] setup cluster secrets
-    - [ ] template configs
-    - [ ] Systemctl script & startup
-    - [ ] Auto-unlock with script/ansible/terraform
-    - [ ] Integrate with Nomad
-- [ ] Observability
+- [x] Vault setup
+    - [x] setup cluster secrets
+    - [x] template configs
+    - [x] Systemctl script & startup
+    - [x] Auto-unlock with script/ansible/terraform
+    - [x] Integrate with Nomad
+- [x] Observability
     - [x] Server health
         - [x] CPU monitor
         - [x] RAM usage monitor
@@ -99,13 +99,13 @@ Run ansible:
     - [x] Log aggregation of jobs
     - [x] Metrics produced by jobs
     - [x] Job tracing
-    - [ ] Host monitoring (disk, cpu, memory)
-- [ ] Networking
+    - [x] Host monitoring (disk, cpu, memory)
+- [x] Networking
     - [x] Understand service mesh/ingress etc from consul
     - [x] Ingress to outside world with http/https
     - [x] Use consul as DNS
-    - [ ] Pull private docker images
-    - [ ] Observability ingress
+    - [x] Pull private docker images
+    - [x] Observability ingress
     - [x] Auto-accept server signatures on first time connect
 - [x] Overall setup
     - [x] Terraform var generation
@@ -115,7 +115,7 @@ Run ansible:
         - [ ] Consul health
         - [ ] Nomad health
         - [ ] Vault health
-        - [ ] Host health
+        - [x] Host health
     - [ ] SLO templates
         - [ ] Web/api service
         - [ ] Headless backend service

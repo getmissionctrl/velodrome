@@ -6,8 +6,6 @@ import (
 	"log"
 	"path/filepath"
 	"strings"
-
-	"github.com/relex/aini"
 )
 
 func parseConsulToken(file string) (string, error) {
@@ -27,7 +25,7 @@ func parseConsulToken(file string) (string, error) {
 	return "", nil
 }
 
-func regenerateConsulPolicies(consul Consul, inventory *aini.InventoryData, baseDir string) error {
+func regenerateConsulPolicies(consul Consul, inventory *Inventory, baseDir string) error {
 	err := makeConsulPolicies(inventory, baseDir)
 	if err != nil {
 		return err
@@ -38,7 +36,7 @@ func regenerateConsulPolicies(consul Consul, inventory *aini.InventoryData, base
 	return consul.UpdatePolicy("consul-policies", policyConsul)
 }
 
-func BootstrapConsul(consul Consul, inventory *aini.InventoryData, baseDir string) (bool, error) {
+func BootstrapConsul(consul Consul, inventory *Inventory, baseDir string) (bool, error) {
 	secrets, err := getSecrets(baseDir)
 	if err != nil {
 		return false, err
@@ -58,6 +56,7 @@ func BootstrapConsul(consul Consul, inventory *aini.InventoryData, baseDir strin
 	policies := map[string]string{
 		"consul-policies":    filepath.Join(baseDir, "consul", "consul-policies.hcl"),
 		"nomad-client":       filepath.Join(baseDir, "consul", "nomad-client-policy.hcl"),
+		"fabio":              filepath.Join(baseDir, "consul", "fabio-policy.hcl"),
 		"nomad-server":       filepath.Join(baseDir, "consul", "nomad-server-policy.hcl"),
 		"prometheus":         filepath.Join(baseDir, "consul", "prometheus-policy.hcl"),
 		"anonymous-dns-read": filepath.Join(baseDir, "consul", "anonymous-policy.hcl"),
@@ -82,6 +81,7 @@ func BootstrapConsul(consul Consul, inventory *aini.InventoryData, baseDir strin
 		"nomad server token": "nomad-server",
 		"prometheus token":   "prometheus",
 		"vault token":        "vault",
+		"fabio token":        "fabio",
 	}
 	tokens := map[string]string{}
 
@@ -97,6 +97,7 @@ func BootstrapConsul(consul Consul, inventory *aini.InventoryData, baseDir strin
 	secrets.NomadClientConsulToken = tokens["nomad-client"]
 	secrets.NomadServerConsulToken = tokens["nomad-server"]
 	secrets.PrometheusConsulToken = tokens["prometheus"]
+	secrets.FabioConsulToken = tokens["fabio"]
 	secrets.VaultConsulToken = tokens["vault"]
 
 	err = writeSecrets(baseDir, secrets)

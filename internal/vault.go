@@ -11,8 +11,6 @@ import (
 	"strings"
 
 	_ "embed"
-
-	"github.com/relex/aini"
 )
 
 //go:embed templates/vault/nomad-server-policy.hcl
@@ -21,7 +19,7 @@ var vaultServerPolicy string
 //go:embed templates/vault/token-role.json
 var vaultTokenRole string
 
-func generateTLS(config *Config, inventory *aini.InventoryData) error {
+func generateTLS(config *Config, inventory *Inventory) error {
 	outputDir := filepath.Join(config.BaseDir, "secrets", "vault")
 	if _, err := os.Stat(filepath.Join(outputDir, "tls.key")); errors.Is(err, os.ErrNotExist) {
 		err := os.MkdirAll(outputDir, 0700)
@@ -29,7 +27,7 @@ func generateTLS(config *Config, inventory *aini.InventoryData) error {
 			return err
 		}
 
-		hosts := getPrivateHostNames(inventory, "vault_servers")
+		hosts := inventory.All.Children.VaultServers.GetPrivateHosts()
 		dnsEntries := []string{}
 		for _, host := range hosts {
 			dnsEntries = append(dnsEntries, fmt.Sprintf("DNS:%s", host))
@@ -47,10 +45,10 @@ func generateTLS(config *Config, inventory *aini.InventoryData) error {
 	return nil
 }
 
-func Vault(config *Config, inventory *aini.InventoryData) error {
+func Vault(config *Config, inventory *Inventory) error {
 	outputDir := filepath.Join(config.BaseDir, "secrets", "vault")
 	initFile := filepath.Join(outputDir, "init.txt")
-	vaultHosts := getHosts(inventory, "vault_servers")
+	vaultHosts := inventory.All.Children.VaultServers.GetHosts()
 
 	toCopy := map[string]string{
 		filepath.Join(config.BaseDir, "vault", "nomad-server-policy.hcl"): vaultServerPolicy,

@@ -20,11 +20,31 @@ type Config struct {
 }
 
 type ClusterConfig struct {
-	Servers               int  `yaml:"servers"`
-	Clients               int  `yaml:"clients"`
-	ConsulVolumeSize      int  `yaml:"consul_volume_size"`
-	VaultServers          int  `yaml:"vault_servers"`
-	SeparateConsulServers bool `yaml:"separate_consul_servers"`
+	Servers               int            `yaml:"servers"`
+	Clients               int            `yaml:"clients"`
+	ConsulVolumeSize      int            `yaml:"consul_volume_size"`
+	VaultServers          int            `yaml:"vault_servers"`
+	SeparateConsulServers bool           `yaml:"separate_consul_servers"`
+	ClientVolumes         []ClientVolume `yaml:"client_volumes"`
+	Ingress               IngressConfig  `yaml:"ingress"`
+}
+
+type IngressConfig struct {
+	ManagementDomain string    `yaml:"management_domain"`
+	SSL              SSLConfig `yaml:"ssl"`
+}
+
+type SSLConfig struct {
+	CertFile string `yaml:"cert_file"`
+	KeyFile  string `yaml:"key_file"`
+	CAFile   string `yaml:"ca_file"`
+}
+
+type ClientVolume struct {
+	Name   string `yaml:"name"`
+	Client string `yaml:"client"`
+	Path   string `yaml:"path"`
+	Size   int    `yaml:"size"`
 }
 
 type CloudProvider struct {
@@ -48,11 +68,13 @@ type HetznerResourceNames struct {
 }
 
 type HetznerSettings struct {
-	Location      string               `yaml:"location"`
-	SSHKeys       []string             `yaml:"ssh_keys"`
-	AllowedIPs    []string             `yaml:"allowed_ips"`
-	ServerType    string               `yaml:"server_type"`
-	ResourceNames HetznerResourceNames `yaml:"resource_names"`
+	Location                  string               `yaml:"location"`
+	SSHKeys                   []string             `yaml:"ssh_keys"`
+	AllowedIPs                []string             `yaml:"allowed_ips"`
+	ServerInstanceType        string               `yaml:"server_instance_type"`
+	ClientInstanceType        string               `yaml:"client_instance_type"`
+	ObservabilityInstanceType string               `yaml:"observability_instance_type"`
+	ResourceNames             HetznerResourceNames `yaml:"resource_names"`
 }
 
 type secretsConfig struct {
@@ -63,6 +85,7 @@ type secretsConfig struct {
 	ConsulAgentToken       string       `yaml:"CONSUL_AGENT_TOKEN"`
 	ConsulBootstrapToken   string       `yaml:"CONSUL_BOOTSTRAP_TOKEN"`
 	PrometheusConsulToken  string       `yaml:"PROMETHEUS_CONSUL_TOKEN"`
+	FabioConsulToken       string       `yaml:"FABIO_CONSUL_TOKEN"`
 	VaultConsulToken       string       `yaml:"VAULT_CONSUL_TOKEN"`
 	S3Endpoint             string       `yaml:"s3_endpoint"`
 	S3AccessKey            string       `yaml:"s3_access_key"`
@@ -87,6 +110,19 @@ func LoadConfig(file string) (*Config, error) {
 		return nil, err
 	}
 	var config Config
+	err = yaml.Unmarshal(bytes, &config)
+	if err != nil {
+		return nil, err
+	}
+	return &config, nil
+}
+
+func LoadInventory(file string) (*Inventory, error) {
+	bytes, err := ioutil.ReadFile(filepath.Clean(file))
+	if err != nil {
+		return nil, err
+	}
+	var config Inventory
 	err = yaml.Unmarshal(bytes, &config)
 	if err != nil {
 		return nil, err

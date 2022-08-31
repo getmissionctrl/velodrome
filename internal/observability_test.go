@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -17,15 +18,18 @@ func TestMkObservabilityConfigs(t *testing.T) {
 		assert.NoError(t, os.RemoveAll(filepath.Join(folder)))
 	}()
 	mkSecrets(t, folder)
-	inv, err := readInventory(filepath.Join("testdata", "inventory"))
+	inv, err := LoadInventory(filepath.Join("testdata", "inventory"))
 	assert.NoError(t, err)
 	consul := &MockConsul{}
-	assert.NoError(t, mkObservabilityConfigs(consul, inv, folder))
+	config, err := LoadConfig(filepath.Join("testdata", "config.yaml"))
+	config.BaseDir = folder
+	assert.NoError(t, err)
+	assert.NoError(t, mkObservabilityConfigs(consul, config, inv))
 
-	assert.Equal(t, 5, len(consul.RegisterIntentionCalls()))
-	assert.Equal(t, 5, len(consul.RegisterServiceCalls()))
+	assert.Equal(t, 6, len(consul.RegisterIntentionCalls()))
+	assert.Equal(t, 6, len(consul.RegisterServiceCalls()))
 
-	assert.Equal(t, 23, readDir(folder))
+	assert.Equal(t, 25, readDir(folder))
 }
 
 func readDir(str string) int {
@@ -38,6 +42,7 @@ func readDir(str string) int {
 		if f.IsDir() {
 			count = count + readDir(filepath.Join(str, f.Name()))
 		} else {
+			fmt.Println(f.Name())
 			count++
 		}
 	}

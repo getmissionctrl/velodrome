@@ -13,7 +13,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/relex/aini"
 	"gopkg.in/yaml.v3"
 )
 
@@ -31,6 +30,18 @@ var consulExporterService string
 
 //go:embed templates/consul/consul-policies.hcl
 var consulPolicies string
+
+//go:embed templates/consul/fabio-policy.hcl
+var fabioPolicy string
+
+//go:embed templates/fabio/fabio.service
+var fabioService string
+
+//go:embed templates/fabio/install-fabio.sh
+var fabioInstaller string
+
+//go:embed templates/fabio/fabio.j2
+var fabioConf string
 
 //go:embed templates/consul/nomad-client-policy.hcl
 var nomadClientPolicy string
@@ -84,7 +95,7 @@ var nomadAnsible string
 var vaultAnsible string
 
 //calculate bootstrap expect from files
-func Configure(inventoryFile, baseDir, dcName string) error {
+func Configure(inventory Inventory, baseDir, dcName string) error {
 
 	err := os.MkdirAll(filepath.Join(baseDir), 0750)
 	if err != nil {
@@ -111,38 +122,17 @@ func Configure(inventoryFile, baseDir, dcName string) error {
 		return err
 	}
 
-	inv, err := readInventory(inventoryFile)
+	err = makeConsulPolicies(&inventory, baseDir)
 	if err != nil {
 		return err
 	}
-	err = makeConsulPolicies(inv, baseDir)
+	err = makeConfigs(inventory, baseDir, dcName)
 	if err != nil {
 		return err
 	}
-	err = makeConfigs(inv, baseDir, dcName)
-	if err != nil {
-		return err
-	}
-	err = Secrets(inv, baseDir, dcName)
+
+	err = Secrets(inventory, baseDir, dcName)
 	return err
-}
-
-func readInventory(inventoryFile string) (*aini.InventoryData, error) {
-
-	f, err := os.Open(filepath.Clean(inventoryFile))
-	defer func() {
-		e := f.Close()
-		if e != nil {
-			fmt.Println(e)
-			os.Exit(1)
-		}
-	}()
-
-	if err != nil {
-		return nil, err
-	}
-
-	return aini.Parse(f)
 }
 
 func getSecrets(baseDir string) (*secretsConfig, error) {
@@ -171,24 +161,19 @@ func writeSecrets(baseDir string, secrets *secretsConfig) error {
 	return nil
 }
 
-func makeConsulPolicies(inv *aini.InventoryData, baseDir string) error {
+func makeConsulPolicies(inventory *Inventory, baseDir string) error {
 
 	err := os.MkdirAll(filepath.Join(baseDir, "consul"), 0750)
 	if err != nil {
 		return err
 	}
+	err = os.MkdirAll(filepath.Join(baseDir, "fabio"), 0750)
+	if err != nil {
+		return err
+	}
 	_ = os.Remove(filepath.Join(baseDir, "consul", "consul-policies.hcl"))
 
-	hostMap := make(map[string]string)
-	hosts := []string{}
-	for _, v := range inv.Groups {
-		for _, v := range v.Hosts {
-			if _, ok := hostMap[v.Vars["host_name"]]; !ok {
-				hosts = append(hosts, v.Vars["host_name"])
-				hostMap[v.Vars["host_name"]] = v.Vars["host_name"]
-			}
-		}
-	}
+	hosts := inventory.GetAllPrivateHosts()
 
 	tmpl, e := template.New("consul-policies").Parse(consulPolicies)
 	if e != nil {
@@ -207,6 +192,7 @@ func makeConsulPolicies(inv *aini.InventoryData, baseDir string) error {
 	}
 
 	toCopy := map[string]string{
+		filepath.Join(baseDir, "consul", "fabio-policy.hcl"):        fabioPolicy,
 		filepath.Join(baseDir, "consul", "nomad-client-policy.hcl"): nomadClientPolicy,
 		filepath.Join(baseDir, "consul", "install-exporter.sh"):     installExporter,
 		filepath.Join(baseDir, "consul", "consul-exporter.service"): consulExporterService,
@@ -214,6 +200,9 @@ func makeConsulPolicies(inv *aini.InventoryData, baseDir string) error {
 		filepath.Join(baseDir, "consul", "prometheus-policy.hcl"):   prometheusPolicy,
 		filepath.Join(baseDir, "consul", "anonymous-policy.hcl"):    anonymousDns,
 		filepath.Join(baseDir, "consul", "vault-policy.hcl"):        vaultPolicy,
+		filepath.Join(baseDir, "fabio", "fabio.j2"):                 fabioConf,
+		filepath.Join(baseDir, "fabio", "fabio.service"):            fabioService,
+		filepath.Join(baseDir, "fabio", "install-fabio.sh"):         fabioInstaller,
 	}
 	for k, v := range toCopy {
 		err = os.WriteFile(k, []byte(v), 0600)
@@ -224,63 +213,19 @@ func makeConsulPolicies(inv *aini.InventoryData, baseDir string) error {
 	return nil
 }
 
-func getHosts(inv *aini.InventoryData, group string) []string {
-	hosts := []string{}
-	for k, v := range inv.Groups {
-		if k == group {
-			for hostname := range v.Hosts {
-				hosts = append(hosts, hostname)
-			}
-			return hosts
-		}
-	}
-	return hosts
-}
-
-func getPrivateHosts(inv *aini.InventoryData, group string) []string {
-	hosts := []string{}
-	for k, v := range inv.Groups {
-		if k == group {
-			for _, h := range v.Hosts {
-				hosts = append(hosts, h.Vars["private_ip"])
-			}
-			return hosts
-		}
-	}
-	return hosts
-}
-
-func getPrivateHostNames(inv *aini.InventoryData, group string) []string {
-	hosts := []string{}
-	for k, v := range inv.Groups {
-		if k == group {
-			for _, h := range v.Hosts {
-				hosts = append(hosts, h.Vars["host_name"])
-			}
-			return hosts
-		}
-	}
-	return hosts
-}
-
-func makeConfigs(inv *aini.InventoryData, baseDir, dcName string) error {
+func makeConfigs(inventory Inventory, baseDir, dcName string) error {
 	hostMap := make(map[string]string)
 	hosts := ""
 	first := true
-	for k, v := range inv.Groups {
-		if k == "consul_servers" {
-			for _, v := range v.Hosts {
-				if _, ok := hostMap[v.Vars["private_ip"]]; !ok {
-					if first {
-						hosts = fmt.Sprintf(`"%v"`, v.Vars["private_ip"])
-						first = false
-					} else {
-						hosts = hosts + `, ` + fmt.Sprintf(`"%v"`, v.Vars["private_ip"])
-					}
-					hostMap[v.Vars["private_ip"]] = v.Vars["private_ip"]
-				}
-			}
+
+	for _, v := range inventory.All.Children.ConsulServers.Hosts {
+		if first {
+			hosts = fmt.Sprintf(`"%v"`, v.PrivateIP)
+			first = false
+		} else {
+			hosts = hosts + `, ` + fmt.Sprintf(`"%v"`, v.PrivateIP)
 		}
+		hostMap[v.PrivateIP] = v.PrivateIP
 	}
 	clientWithDC := strings.ReplaceAll(consulClient, "dc1", dcName)
 	clientWithDC = strings.ReplaceAll(clientWithDC, "join_servers", hosts)
@@ -291,7 +236,7 @@ func makeConfigs(inv *aini.InventoryData, baseDir, dcName string) error {
 
 	serverWithDC := strings.ReplaceAll(consulServer, "dc1", dcName)
 	serverWithDC = strings.ReplaceAll(serverWithDC, "join_servers", hosts)
-	serverWithDC = strings.ReplaceAll(serverWithDC, "EXPECTS_NO", fmt.Sprintf("%v", len(getHosts(inv, "consul_servers"))))
+	serverWithDC = strings.ReplaceAll(serverWithDC, "EXPECTS_NO", fmt.Sprintf("%v", len(inventory.All.Children.ConsulServers.GetHosts())))
 	err = os.WriteFile(filepath.Join(baseDir, "consul", "server.j2"), []byte(serverWithDC), 0600)
 	if err != nil {
 		return err
@@ -312,7 +257,7 @@ func makeConfigs(inv *aini.InventoryData, baseDir, dcName string) error {
 	nomadServerService := strings.ReplaceAll(nomadService, "nomad_user", "nomad")
 	nomadClientService := strings.ReplaceAll(nomadService, "nomad_user", "root")
 
-	nomadServer = strings.ReplaceAll(nomadServer, "EXPECTS_NO", fmt.Sprintf("%v", len(getHosts(inv, "nomad_servers"))))
+	nomadServer = strings.ReplaceAll(nomadServer, "EXPECTS_NO", fmt.Sprintf("%v", len(inventory.All.Children.NomadServers.GetHosts())))
 	nomadServer = strings.ReplaceAll(nomadServer, "dc1", dcName)
 	nomadClient = strings.ReplaceAll(nomadClient, "dc1", dcName)
 
@@ -336,7 +281,7 @@ func makeConfigs(inv *aini.InventoryData, baseDir, dcName string) error {
 	return nil
 }
 
-func Secrets(inv *aini.InventoryData, baseDir, dcName string) error {
+func Secrets(inventory Inventory, baseDir, dcName string) error {
 	var out bytes.Buffer
 	err := runCmd("", "consul keygen", &out)
 	if err != nil {
@@ -368,6 +313,7 @@ func Secrets(inv *aini.InventoryData, baseDir, dcName string) error {
 		NomadServerConsulToken: "TBD",
 		ConsulAgentToken:       "TBD",
 		ConsulBootstrapToken:   "TBD",
+		FabioConsulToken:       "TBD",
 		S3Endpoint:             os.Getenv("S3_ENDPOINT"),
 		S3SecretKey:            os.Getenv("S3_SECRET_KEY"),
 		S3AccessKey:            os.Getenv("S3_ACCESS_KEY"),
@@ -408,8 +354,8 @@ func Secrets(inv *aini.InventoryData, baseDir, dcName string) error {
 		if err != nil {
 			return err
 		}
-		hosts := getHosts(inv, "nomad_servers")
-		privateHosts := getPrivateHosts(inv, "nomad_servers")
+		hosts := inventory.All.Children.NomadServers.GetHosts()
+		privateHosts := inventory.All.Children.NomadServers.GetPrivateHosts()
 		hostString := fmt.Sprintf("server.global.nomad,%s,%s", strings.Join(hosts, ","), strings.Join(privateHosts, ","))
 		fmt.Println("generating cert for hosts: " + hostString)
 
@@ -434,6 +380,34 @@ func Secrets(inv *aini.InventoryData, baseDir, dcName string) error {
 
 	}
 	return nil
+}
+
+func copySSLCerts(config *Config) error {
+	destDir := filepath.Join(config.BaseDir, "secrets", "fabio")
+	err := os.MkdirAll(destDir, 0700)
+	if err != nil {
+		return err
+	}
+	fmt.Println(config.ClusterConfig.Ingress.SSL.CertFile)
+	fmt.Println(filepath.Join(destDir, "server.crt"))
+	err = copyFile(config.ClusterConfig.Ingress.SSL.CertFile, filepath.Join(destDir, "server.crt"))
+	if err != nil {
+		return err
+	}
+	err = copyFile(config.ClusterConfig.Ingress.SSL.KeyFile, filepath.Join(destDir, "server.key"))
+	if err != nil {
+		return err
+	}
+	return copyFile(config.ClusterConfig.Ingress.SSL.CAFile, filepath.Join(destDir, "cacert.pem"))
+}
+
+func copyFile(sourceFile, destinationFile string) error {
+	input, err := ioutil.ReadFile(filepath.Clean(sourceFile))
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(filepath.Clean(destinationFile), input, 0600)
 }
 
 func runCmd(dir, command string, stdOut io.Writer) error {

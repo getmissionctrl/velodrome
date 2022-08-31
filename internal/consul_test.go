@@ -38,14 +38,14 @@ func TestBootstrapConsul(t *testing.T) {
 			return policy, nil
 		},
 	}
-	inv, err := readInventory(filepath.Join("testdata", "inventory"))
+	inv, err := LoadInventory(filepath.Join("testdata", "inventory"))
 	assert.NoError(t, err)
 	b, err := BootstrapConsul(consul, inv, folder)
 	assert.NoError(t, err)
 	assert.True(t, b)
-	assert.Equal(t, 6, len(consul.RegisterPolicyCalls()))
+	assert.Equal(t, 7, len(consul.RegisterPolicyCalls()))
 
-	assert.Equal(t, 5, len(consul.RegisterACLCalls()))
+	assert.Equal(t, 6, len(consul.RegisterACLCalls()))
 	newSecrets, err := getSecrets(folder)
 	assert.NoError(t, err)
 

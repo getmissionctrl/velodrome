@@ -77,8 +77,14 @@ job "demo" {
       }
 
       config {
-        image = "wfaler/demo-app:v16"
+        #image = "wfaler/demo-app:v16"
+        image = "ghcr.io/chaordic-io/demo-app:v1"
         ports = ["http", "prometheus"]
+        auth {
+          username = "wfaler"
+          password = "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"
+          server_address = "ghcr.io"
+        }
       }
       env {
         PORT = "8080"

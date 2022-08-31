@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/foomo/htpasswd"
 )
 
 func Bootstrap(ctx context.Context, config *Config, configPath string) error {
@@ -54,8 +56,11 @@ func Bootstrap(ctx context.Context, config *Config, configPath string) error {
 	if err != nil {
 		return err
 	}
-
-	err = Configure(inventory, baseDir, dcName)
+	inv, err := LoadInventory(inventory)
+	if err != nil {
+		return err
+	}
+	err = Configure(*inv, baseDir, dcName)
 	if err != nil {
 		return err
 	}
@@ -63,12 +68,6 @@ func Bootstrap(ctx context.Context, config *Config, configPath string) error {
 	secrets := filepath.Join(baseDir, "secrets", "secrets.yml")
 	fmt.Println("sleeping 10s to ensure all nodes are available..")
 	time.Sleep(10 * time.Second)
-
-	//ansible-galaxy install deekayen.awscli2
-	// err = runCmd("", "ansible-galaxy install cloudalchemy.node_exporter", os.Stdout)
-	// if err != nil {
-	// 	return err
-	// }
 
 	err = runCmd("", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s -e @%s", setup, inventory, user, secrets, configPath), os.Stdout)
 	if err != nil {
@@ -79,10 +78,7 @@ func Bootstrap(ctx context.Context, config *Config, configPath string) error {
 	if err != nil {
 		return err
 	}
-	inv, err := readInventory(inventory)
-	if err != nil {
-		return err
-	}
+
 	sec, err := getSecrets(baseDir)
 	if err != nil {
 		return err
@@ -103,7 +99,17 @@ func Bootstrap(ctx context.Context, config *Config, configPath string) error {
 	if err != nil {
 		return err
 	}
-
+	sec, err = getSecrets(baseDir)
+	if err != nil {
+		return err
+	}
+	file := filepath.Join(config.BaseDir, "secrets", "consul.htpasswd")
+	name := "consul"
+	password := sec.ConsulBootstrapToken
+	err = htpasswd.SetPassword(file, name, password, htpasswd.HashBCrypt)
+	if err != nil {
+		return err
+	}
 	vaultSetup := filepath.Join(baseDir, "vault.yml")
 	err = runCmd("", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s -e @%s", vaultSetup, inventory, user, secrets, configPath), os.Stdout)
 	if err != nil {
@@ -114,10 +120,15 @@ func Bootstrap(ctx context.Context, config *Config, configPath string) error {
 		return err
 	}
 
+	err = copySSLCerts(config)
+	if err != nil {
+		return err
+	}
+
 	nomadSetup := filepath.Join(baseDir, "nomad.yml")
 	err = runCmd("", fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s -e @%s", nomadSetup, inventory, user, secrets, configPath), os.Stdout)
 	if err != nil {
 		return err
 	}
-	return Observability(inventory, configPath, baseDir, user)
+	return Observability(config, inventory, configPath)
 }

@@ -111,7 +111,7 @@ func observability() *cobra.Command {
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			err = internal.Observability(filepath.Join(config.BaseDir, "inventory"), configFile, config.BaseDir, config.CloudProviderConfig.User)
+			err = internal.Observability(config, filepath.Join(config.BaseDir, "inventory"), configFile)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)

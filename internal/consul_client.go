@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/relex/aini"
 )
 
 type Consul interface {
@@ -19,17 +17,17 @@ type Consul interface {
 }
 
 type consulBinary struct {
-	inventory *aini.InventoryData
+	inventory *Inventory
 	secrets   *secretsConfig
 	baseDir   string
 }
 
-func NewConsul(inventory *aini.InventoryData, secrets *secretsConfig, baseDir string) Consul {
+func NewConsul(inventory *Inventory, secrets *secretsConfig, baseDir string) Consul {
 	return &consulBinary{inventory: inventory, secrets: secrets, baseDir: baseDir}
 }
 
 func (client *consulBinary) Bootstrap() (string, error) {
-	hosts := getHosts(client.inventory, "consul_servers")
+	hosts := client.inventory.All.Children.ConsulServers.GetHosts()
 	if len(hosts) == 0 {
 		return "", fmt.Errorf("no consul servers found in inventory")
 	}
@@ -94,7 +92,7 @@ func (client *consulBinary) RegisterService(file string) error {
 }
 
 func (client *consulBinary) getExports() (string, error) {
-	hosts := getHosts(client.inventory, "consul_servers")
+	hosts := client.inventory.All.Children.ConsulServers.GetHosts()
 	if len(hosts) == 0 {
 		return "", fmt.Errorf("no consul servers found in inventory")
 	}

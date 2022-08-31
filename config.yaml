@@ -6,12 +6,18 @@ cluster_config:
   servers: 3 # 3 or 5
   clients: 2
   vault_servers: 2
-  consul_volume_size: 11
+  consul_volume_size: 10
   separate_consul_servers: false
+  ingress:
+    management_domain: venue.dev
+    ssl:
+      cert_file: certs/server.crt
+      key_file: certs/server.key
+      ca_file: certs/Cloudflare_CA.pem
   client_volumes:
   - name: "data_vol"
-    client: "1"
-    path: /opt/nomad_client/data
+    client: "venue-client-1"
+    path: /opt/nomad_client_data
     size: 20
   # host_volume "mysql" {
   #   path      = "/opt/mysql/data"
@@ -32,7 +38,9 @@ cloud_provider_config:
     location: nbg1
     ssh_keys:
     - wille.faler@gmail.com
-    server_type: cx21
+    server_instance_type: cx21
+    client_instance_type: cx21
+    observability_instance_type: cx21
     resource_names:
       base_server_name: venue
       firewall_name: dev_firewall

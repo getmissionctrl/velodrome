@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
-
-	"github.com/relex/aini"
 )
 
 //go:embed templates/consul/intention.hcl
@@ -60,6 +58,9 @@ var tempoConsulService string
 //go:embed templates/loki/loki-http.hcl
 var lokiHttpService string
 
+//go:embed templates/consul/consul-ingress.hcl
+var consulHttpService string
+
 //go:embed templates/grafana/grafana.hcl
 var grafanaHttpService string
 
@@ -67,14 +68,16 @@ var grafanaHttpService string
 var prometheusConsulService string
 
 type consulServiceConf struct {
-	template  string
-	hostGroup string
-	file      string
-	name      string
+	template      string
+	getPrivateIPs func(*Inventory) []string
+	file          string
+	name          string
 }
 
-func Observability(inventory, configFile, baseDir, user string) error {
-	inv, err := readInventory(inventory)
+func Observability(config *Config, inventory, configFile string) error {
+	baseDir := config.BaseDir
+	user := config.CloudProviderConfig.User
+	inv, err := LoadInventory(inventory)
 	if err != nil {
 		return err
 	}
@@ -86,7 +89,7 @@ func Observability(inventory, configFile, baseDir, user string) error {
 	}
 	consul := NewConsul(inv, sec, baseDir)
 
-	err = mkObservabilityConfigs(consul, inv, baseDir)
+	err = mkObservabilityConfigs(consul, config, inv)
 	if err != nil {
 		return err
 	}
@@ -101,10 +104,11 @@ func Observability(inventory, configFile, baseDir, user string) error {
 	return nil
 }
 
-func mkObservabilityConfigs(consul Consul, inv *aini.InventoryData, baseDir string) error {
+func mkObservabilityConfigs(consul Consul, config *Config, inv *Inventory) error {
 	dirs := []string{
-		"prometheus", "loki", "grafana", "intentions", "tempo",
+		"prometheus", "loki", "grafana", "intentions", "tempo", "consul",
 	}
+	baseDir := config.BaseDir
 	for _, dir := range dirs {
 		err := os.MkdirAll(filepath.Join(baseDir, dir), 0750)
 		if err != nil {
@@ -131,14 +135,14 @@ func mkObservabilityConfigs(consul Consul, inv *aini.InventoryData, baseDir stri
 		}
 	}
 
-	clients := getPrivateHosts(inv, "clients")
-	consulServers := getPrivateHosts(inv, "consul_servers")
-	nomadServers := getPrivateHosts(inv, "nomad_servers")
-	vaultServers := getPrivateHosts(inv, "vault_servers")
-	tempo := getPrivateHosts(inv, "tempo")
-	prometheus := getPrivateHosts(inv, "prometheus")
-	loki := getPrivateHosts(inv, "loki")
-	grafana := getPrivateHosts(inv, "grafana")
+	clients := inv.All.Children.Clients.GetPrivateHosts()
+	consulServers := inv.All.Children.ConsulServers.GetPrivateHosts()
+	nomadServers := inv.All.Children.NomadServers.GetPrivateHosts()
+	vaultServers := inv.All.Children.VaultServers.GetPrivateHosts()
+	tempo := inv.All.Children.Tempo.GetPrivateHosts()
+	prometheus := inv.All.Children.Prometheus.GetPrivateHosts()
+	loki := inv.All.Children.Loki.GetPrivateHosts()
+	grafana := inv.All.Children.Grafana.GetPrivateHosts()
 	allObs := append(append(append(tempo, prometheus...), loki...), grafana...)
 
 	obsKV := make(map[string]string)
@@ -146,7 +150,7 @@ func mkObservabilityConfigs(consul Consul, inv *aini.InventoryData, baseDir stri
 		obsKV[server] = server
 	}
 	observabilityServers := []string{}
-	for k, _ := range obsKV {
+	for k := range obsKV {
 		observabilityServers = append(observabilityServers, k)
 	}
 
@@ -175,41 +179,60 @@ func mkObservabilityConfigs(consul Consul, inv *aini.InventoryData, baseDir stri
 
 	consulServices := []consulServiceConf{
 		{
-			template:  tempoGrpcService,
-			hostGroup: "tempo",
-			file:      filepath.Join(baseDir, "tempo", "tempo-grpc.hcl"),
-			name:      "tempo-grpc",
+			template: tempoGrpcService,
+			getPrivateIPs: func(inv *Inventory) []string {
+				return inv.All.Children.Tempo.GetPrivateHosts()
+			},
+			file: filepath.Join(baseDir, "tempo", "tempo-grpc.hcl"),
+			name: "tempo-grpc",
 		},
 		{
-			template:  tempoConsulService,
-			hostGroup: "tempo",
-			file:      filepath.Join(baseDir, "tempo", "tempo.hcl"),
-			name:      "tempo",
+			template: tempoConsulService,
+			getPrivateIPs: func(inv *Inventory) []string {
+				return inv.All.Children.Tempo.GetPrivateHosts()
+			},
+			file: filepath.Join(baseDir, "tempo", "tempo.hcl"),
+			name: "tempo",
 		},
 		{
-			template:  prometheusConsulService,
-			hostGroup: "prometheus",
-			file:      filepath.Join(baseDir, "prometheus", "prometheus.hcl"),
-			name:      "prometheus",
+			template: prometheusConsulService,
+			getPrivateIPs: func(inv *Inventory) []string {
+				return inv.All.Children.Prometheus.GetPrivateHosts()
+			},
+			file: filepath.Join(baseDir, "prometheus", "prometheus.hcl"),
+			name: "prometheus",
 		},
 		{
-			template:  lokiHttpService,
-			hostGroup: "loki",
-			file:      filepath.Join(baseDir, "loki", "loki.hcl"),
-			name:      "loki",
+			template: lokiHttpService,
+			getPrivateIPs: func(inv *Inventory) []string {
+				return inv.All.Children.Loki.GetPrivateHosts()
+			},
+			file: filepath.Join(baseDir, "loki", "loki.hcl"),
+			name: "loki",
 		},
 		{
-			template:  grafanaHttpService,
-			hostGroup: "grafana",
-			file:      filepath.Join(baseDir, "grafana", "grafana.hcl"),
-			name:      "grafana",
+			template: grafanaHttpService,
+			getPrivateIPs: func(inv *Inventory) []string {
+				return inv.All.Children.Grafana.GetPrivateHosts()
+			},
+			file: filepath.Join(baseDir, "grafana", "grafana.hcl"),
+			name: "grafana",
+		},
+		{
+			template: consulHttpService,
+			getPrivateIPs: func(inv *Inventory) []string {
+				return inv.All.Children.ConsulServers.GetPrivateHosts()
+			},
+			file: filepath.Join(baseDir, "consul", "consul-ingress.hcl"),
+			name: "consul-ingress",
 		},
 	}
 
 	for _, service := range consulServices {
-		servers := getPrivateHosts(inv, service.hostGroup)
+		servers := service.getPrivateIPs(inv)
 		fmt.Println(servers)
 		template := strings.ReplaceAll(service.template, "HOST", servers[0])
+		template = strings.ReplaceAll(template, "ROOTDOMAIN", config.ClusterConfig.Ingress.ManagementDomain)
 		err = os.WriteFile(filepath.Clean(service.file), []byte(template), 0600)
 		if err != nil {
 			return err
