@@ -21,9 +21,9 @@ func main() {
 	}
 
 	rootCmd := &cobra.Command{
-		Use:   "hshstack",
-		Short: "sets up the hashistack",
-		Long:  `hshstack - setups up Consul & Nomad with ACL & Service Mesh enabled`,
+		Use:   "velodrome",
+		Short: "sets up the velodrome",
+		Long:  `velodrome - setups up Consul, Vault & Nomad with ACL & Service Mesh enabled`,
 		Run: func(cmd *cobra.Command, args []string) {
 			err = cmd.Help()
 			if err != nil {
