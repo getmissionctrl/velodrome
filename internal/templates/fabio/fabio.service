@@ -1,7 +1,7 @@
 [Unit]
 Description=Fabio proxy
-After=syslog.target
-After=network.target
+Wants=consul.service
+After=consul.service
 
 [Service]
 LimitMEMLOCK=infinity
