@@ -52,7 +52,6 @@ func HasDependencies() bool {
 			return false
 		}
 	}
-	fmt.Println(runtime.GOOS)
 
 	missing := []string{}
 	for _, v := range dependencies {

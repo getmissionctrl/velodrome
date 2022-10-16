@@ -24,8 +24,7 @@ func GetCloudflareIPs(ctx context.Context) (*CloudflareIPs, error) {
 		return nil, err
 	}
 	defer func() {
-		e := ipv6Resp.Body.Close()
-		fmt.Println(e)
+		_ = ipv6Resp.Body.Close() //nolint
 	}()
 	req, err = http.NewRequestWithContext(ctx, "GET", "https://www.cloudflare.com/ips-v4", nil)
 	if err != nil {
@@ -36,8 +35,7 @@ func GetCloudflareIPs(ctx context.Context) (*CloudflareIPs, error) {
 		return nil, err
 	}
 	defer func() {
-		e := ipv4Resp.Body.Close()
-		fmt.Println(e)
+		_ = ipv4Resp.Body.Close() // nolint
 	}()
 
 	if ipv4Resp.StatusCode != 200 || ipv6Resp.StatusCode != 200 {
