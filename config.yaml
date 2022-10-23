@@ -19,10 +19,6 @@ cluster_config:
     client: "venue-client-1"
     path: /opt/nomad_client_data
     size: 20
-  # host_volume "mysql" {
-  #   path      = "/opt/mysql/data"
-  #   read_only = false
-  # }
 
 observability_config:
   multi_instance: false # sets all on 1 server if false, 4 separate if true
@@ -30,7 +26,7 @@ observability_config:
   loki_bucket: loki
 
 cloud_provider_config:
-  internal_network_interface_name: ens10
+  internal_network_interface_name: ens10 # used for Docker network interface, can be different on different types of nodes.
   sudo_user: root
   sudo_dir: /root
   provider: hetzner

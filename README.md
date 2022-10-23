@@ -1,66 +1,115 @@
-# Venue Cluster
-Sets up Consul & Nomad Servers & Clients given an inventory.
+# Velodrome
+Sets up Consul, Nomad & Vault Servers & Clients given an Cloud specific config, with full observability via Grafana, Prometheus, Loki & Tempo + [Fabio LB](https://fabiolb.net) as an ingress. 
+Currently supports [Hetzner](https://www.hetzner.com), AWS, Azure & GCP coming soon.
 
-## Instructions for repo
-Your machine/operator node will need the following pre-installed:
+Networking is setup so your bastion host (`allowed_ips`) have full access to the cluster, while Cloudflare IPs have access to ports 80 and 443.
+
+# Pre-requisites
+## Pre-requisite software
+Your machine/operator node will need the following pre-installed (velodrome will check for presence before execution):
 * `nomad`
 * `consul`
 * `vault`
 * `ansible`
 * `cfssl` & `cfssljson`
 
+You probably want to also use [git secret](https://git-secret.io) to protect your `[base_dir]/secrets` directory in the generated files.
+Additionally, [direnv](https://direnv.net) will make life easier, as `velodrome genenv --config.file [config]` will generate a direnv compatible `.envrc` file for you.
 
-`git secret`-usage:
-```
-# add file
-git secret add [file]
-# make available to user
-git secret tell [email of user in gnupg keychain]
-# hide secrets
-git secret hide
-# show secret
-git secret reveal
-# other to see commands
-git secret
-```
-
-
-## Instructions on new server
-When a new server is added:
-* Add to appropriate inventory place
-* Add SSH key:
+To ensure other env variables are preserved with `velodrome genenv`, just add this line into an existing `.envrc` file:
 
 ```
-ssh-copy-id root@[ip of server]
+### GENERATED CONFIG BELOW THIS LINE, DO NOT EDIT!
 ```
 
-* Disable password login:
+## Other requirements
+* An SSL certificate with cert, key and ca-file. Can easily be generated with for instance `Cloudflare` (network setup has been tested primarily with Cloudflare)
+* An SSH key and project already setup in Hetzner (when using Hetzner).
+* The following 4 environment variables set in your environment (S3 settings can be any S3 compatible store, including Cloudflare R2, this is used for Observability stack long-term storage):
+    * `S3_ENDPOINT`
+    * `S3_ACCESS_KEY`
+    * `S3_SECRET_KEY`
+    * `HETZNER_TOKEN` (generated from your Hetzner account)
+* a `config.yaml` file. Please review the file with similar name in the root of this directory for options. Ensure that the IP of your machine/bastion host is in the `allowed_ips` section.
+
+## Setup
+Once all of the above steps are setup, just run `velodrome sync --config.file [config file]`. If no cluster exists, it will be setup for you. If one exists, it will be synced with your config, setting up the entire cluster.
+
+# Non-automated steps requiring manual steps
+
+## Add data sources in Grafana
 
 ```
-vi /etc/ssh/sshd_config
+Loki: http://loki-http.service.consul:3100
+
+Prometheus: http://prometheus.service.consul:9000
+
+Tempo: http://tempo.service.consul:3200
 ```
 
-Find following sections and set to no:
+## Add Nomad & Node dashboards
+* Nomad: add dashboard ID 15764
+* Nodes: add dashboard ID 12486
+
+## Link Loki to Tempo traces
+
+Add derived fields:
 
 ```
-ChallengeResponseAuthentication no
-PasswordAuthentication no
-UsePAM no
-```
-
-Reload ssh:
-```
-/etc/init.d/ssh reload
-sudo systemctl reload ssh
-```
-
-Run ansible:
+Name: trace_id
+Regex: "trace_id":"([A-Za-z0-9]+)" // this is for json format
+Query: ${__value.raw}
+Url label: Trace
+Internal link: Tempo
 
 ```
- ansible-playbook setup.yml -i datacenters/contabo/inventory -u root -e @secrets/secrets.yml
+
+## Load Balancing
+Load balancing has been tested with Cloudflare Load Balancer. Simply put the public IPs of your client nodes (found in `config/inventory`) into a Cloudflare LB. This can be automated with Terraform, or simply done manually through the Cloudflare interface.
+
+To make DNS work, you will need your root-domain setup, as well as CNAMEs for any additional domains or subdomains.
+
+By default, the cluster will try to setup the following:
+* `grafana.[your management_domain]` (you still need to setup DNS with Cloudflare)
+    * Once public, please change the default password immediately!
+* `consul.[your management_domain]` (you still need to setup DNS with Cloudflare)
+    * Username/password will be `consul` and `CONSUL_HTTP_TOKEN` you get from `velodrome genenv`
+## Nomad jobs, using consul & vault
+There are examples in the `examples/` folder of this repo.
+### Use vault from nomad job (example)
+to make specific app policies:
+
+`access.hcl`
+```
+path "secret/*" { #some path in secrets
+    capabilities = ["read"]
+}
 ```
 
-## TODO
+```
+vault policy write backend access.hcl
+```
+
+in `nomad task definition`:
+```
+      vault {
+        policies = ["backend"] # policy given above
+
+        change_mode   = "signal"
+        change_signal = "SIGUSR1"
+      }
+```
+
+## Kill orphaned nomad mounts if killing a client node
+
+```
+export NOMAD_DATA_ROOT=«Path to your Nomad data_dir»
+
+for ALLOC in `ls -d $NOMAD_DATA_ROOT/alloc/*`; do for JOB in `ls ${ALLOC}| grep -v alloc`; do umount ${ALLOC}/${JOB}/secrets; umount ${ALLOC}/${JOB}/dev; umount ${ALLOC}/${JOB}/proc; umount ${ALLOC}/${JOB}/alloc; done; done
+```
+
+
+# TODO
 - [x] Harden servers
     - [x] Add SSH Key login
     - [x] Setup UFW firewall rules
@@ -124,141 +173,3 @@ Run ansible:
         - [ ] Nomad health
         - [ ] Vault health
         - [ ] Host health (CPU, memory, disk)
-
-# Kill orphaned nomad mounts
-
-```
-export NOMAD_DATA_ROOT=«Path to your Nomad data_dir»
-
-for ALLOC in `ls -d $NOMAD_DATA_ROOT/alloc/*`; do for JOB in `ls ${ALLOC}| grep -v alloc`; do umount ${ALLOC}/${JOB}/secrets; umount ${ALLOC}/${JOB}/dev; umount ${ALLOC}/${JOB}/proc; umount ${ALLOC}/${JOB}/alloc; done; done
-```
-# Cert for client access with browser.
-```
-openssl pkcs12 -inkey consul-agent-ca-key.pem -in consul-agent-ca.pem -export -out consul.pfx
-```
-# Notes
-
-### Scrape consul
-```
-    - job_name: integrations/consul
-      metrics_path: /v1/agent/metrics
-      params:
-        format:
-        - prometheus
-      static_configs:
-      - targets:
-        - {{ private_ip }}:8500
-```
-
-# O11y setup
-
-## Tempo search in Grafana
-
-Edit `/etc/grafana/grafana.ini`, add:
-
-```
-[feature_toggles]
-enable = tempoSearch tempoBackendSearch
-
-```
-
-## Link Loki to Tempo traces
-
-Add derived fields:
-
-```
-Name: trace_id
-Regex: "trace_id":"([A-Za-z0-9]+)" // this is for json format
-Query: ${__value.raw}
-Url label: Trace
-Internal link: Tempo
-
-```
-
-
-## Hetzner cloud volume pattern
-```
-/mnt/HC_Volume_21865747
-
-```
-numbers are the assigned volume ID, you can get it in terraform.
-
-
-
-openssl req -new -newkey rsa:4096 -x509 -sha256 -nodes -out vault.crt -keyout vault.key 
-
-
-
-openssl genrsa -aes256 -out vaultCA.key 2048
-
-
-openssl req -key vaultCA.key -new -out domain.csr
-
-
-
-openssl req -key vaultCA.key rsa:2048 -nodes -keyout domain.key -x509 -days 365 -out domain.crt
-
-Must use Homebrew openssl:
-openssl req -out tls.crt -new -keyout tls.key -newkey rsa:4096 -nodes -sha256 -x509 -subj "/O=HashiCorp/CN=Vault" -addext "subjectAltName = IP:0.0.0.0,DNS:vault.service.consul,DNS:venue-vault-1,DNS:venue-vault-2" -days 3650
-
-88.99.172.159 host_name=venue-vault-1 private_ip=10.0.2.2
-78.46.128.124 host_name=venue-vault-2 private_ip=10.0.2.3
-
-
-# Vault setup
-Generate TLS keys - must be with homebrew or Nix openssl
-
-```
-openssl req -out tls.crt -new -keyout tls.key -newkey rsa:4096 -nodes -sha256 -x509 -subj "/O=HashiCorp/CN=Vault" -addext "subjectAltName = IP:0.0.0.0,DNS:vault.service.consul,DNS:venue-vault-1,DNS:venue-vault-2"
-```
-
-run `vault operator init`
-
-run `vault operator unseal` on each vault node  
-
-To be able to store secrets:
-`vault secrets enable -path=secret/ kv`
-
-Danach:
-
-` vault kv put secret/hello foo=world  `
-` vault kv get secret/hello`
-
-
-
-https://www.cloudflare.com/ips-v6
-https://www.cloudflare.com/ips-v4
-
-
-```
-vault policy write nomad-server internal/templates/vault/nomad-server-policy.hcl
-
-vault token create -policy nomad-server -period 72h -orphan > nomad.txt
-
-vault write /auth/token/roles/nomad-cluster @internal/templates/vault/token-role.json
-```
-
-token into `nomad_root_token` of secrets
-
-
-to make specific app policies:
-
-`access.hcl`
-```
-path "secret/*" { #some path in secrets
-    capabilities = ["read"]
-}```
-
-```
-vault policy write backend access.hcl
-```
-
-in `nomad task definition`:
-```
-      vault {
-        policies = ["backend"] # policy given above
-
-        change_mode   = "signal"
-        change_signal = "SIGUSR1"
-      }
-```

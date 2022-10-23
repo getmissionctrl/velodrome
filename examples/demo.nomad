@@ -82,7 +82,7 @@ job "demo" {
         ports = ["http", "prometheus"]
         auth {
           username = "wfaler"
-          password = "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"
+          password = "github token"
           server_address = "ghcr.io"
         }
       }
