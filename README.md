@@ -52,7 +52,7 @@ Tempo: http://tempo.service.consul:3200
 * Nodes: add dashboard ID 12486
 
 ## Link Loki to Tempo traces
-
+This linking assumes your app is setup as this example: [demo-app](https://github.com/chaordic-io/demo-app). Important is that logs are also in json format.
 Add derived fields:
 
 ```
