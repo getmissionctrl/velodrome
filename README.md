@@ -4,6 +4,10 @@ Currently supports [Hetzner](https://www.hetzner.com), AWS, Azure & GCP coming s
 
 Networking is setup so your bastion host (`allowed_ips`) have full access to the cluster, while Cloudflare IPs have access to ports 80 and 443.
 
+Below is a reference architecture of what is created, and how it should be used. Velodrome concerns itself with the left side of the diagram, GitOps repo and operator is for you to implement (we may build something for this later):
+
+![Hashistack](Hashistack.jpg)
+
 # Pre-requisites
 ## Pre-requisite software
 Your machine/operator node will need the following pre-installed (velodrome will check for presence before execution):
